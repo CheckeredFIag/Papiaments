@@ -1,18 +1,17 @@
 """
 update_index.py
-Beheert de woordenlijsten in docs/index.html vanuit Python.
-Laadt woorden en emoji's uit aruba_papiamento_db_structuur.csv
+Genereert docs/data.js vanuit aruba_papiamento_db_structuur.csv.
+index.html laadt dit bestand via <script src="data.js"></script>.
 Gebruik: python update_index.py
 """
 
-import re
 import csv
 import json
 from pathlib import Path
 from datetime import date
 
-HTML_FILE = Path('docs/index.html')
 CSV_FILE  = Path('aruba_papiamento_db_structuur.csv')
+DATA_FILE = Path('docs/data.js')
 
 # ============================================================
 # CSV INLEZEN
@@ -21,6 +20,10 @@ CSV_FILE  = Path('aruba_papiamento_db_structuur.csv')
 def load_csv() -> list[dict]:
     rows = []
     with open(CSV_FILE, encoding='utf-8') as f:
+        first = f.readline()
+        # Sla de lege eerste regel over (;;;;;;;;)
+        if first.strip().replace(';', ''):
+            f.seek(0)   # toch inhoud → begin opnieuw
         reader = csv.DictReader(f, delimiter=';')
         for row in reader:
             if not row.get('papiamento_aruba', '').strip():
@@ -35,238 +38,166 @@ def load_csv() -> list[dict]:
             })
     return rows
 
-def get_words_from_csv(niveau: str = None) -> list[dict]:
-    rows = load_csv()
-    result = []
+# ============================================================
+# DATA BOUWEN
+# ============================================================
+
+def build_words(rows: list[dict]) -> list[dict]:
+    """Alle unieke woorden als woordkaartjes, met niveau."""
     seen = set()
+    result = []
     for row in rows:
         if row['type'] != 'woord':
-            continue
-        if niveau and row['niveau'] != niveau:
             continue
         key = row['woord']
         if key in seen:
             continue
         seen.add(key)
-        result.append(row)
-    return result
-
-def get_sentences_from_csv() -> list[dict]:
-    return [r for r in load_csv() if r['type'] == 'zin']
-
-# ============================================================
-# LEES & SCHRIJF HTML
-# ============================================================
-
-def read_html() -> str:
-    return HTML_FILE.read_text(encoding='utf-8')
-
-def write_html(text: str):
-    HTML_FILE.write_text(text, encoding='utf-8')
-    print(f"✅ {HTML_FILE} opgeslagen.")
-
-def update_date_stamp(html: str) -> str:
-    today = date.today().isoformat()
-    return re.sub(
-        r'<!-- Updated on \d{4}-\d{2}-\d{2} -->',
-        f'<!-- Updated on {today} -->',
-        html
-    )
-
-# ============================================================
-# JS ARRAY LEZEN EN SCHRIJVEN
-# ============================================================
-
-def extract_js_array(html: str, var_name: str) -> list:
-    """Extraheer een JS array uit de HTML, ook met single quotes en emoji's."""
-    pattern = rf'const {var_name} = (\[.*?\]);'
-    match = re.search(pattern, html, re.DOTALL)
-    if not match:
-        raise ValueError(f"Variabele '{var_name}' niet gevonden in HTML.")
-
-    raw = match.group(1)
-
-    # Stap 1: escaped single quotes tijdelijk vervangen
-    raw = raw.replace("\\'", "##SQUOTE##")
-
-    # Stap 2: single quotes → double quotes
-    raw = re.sub(r"'([^']*)'", r'"\1"', raw)
-
-    # Stap 3: tijdelijke placeholder terugzetten als escaped quote in JSON
-    raw = raw.replace("##SQUOTE##", "'")
-
-    # Stap 4: trailing comma's verwijderen (JS staat dit toe, JSON niet)
-    raw = re.sub(r',\s*\]', ']', raw)
-    raw = re.sub(r',\s*\}', '}', raw)
-
-    # Stap 5: ongequote JS keys → gequote JSON keys (bv. word: → "word":)
-    raw = re.sub(r'(?<=[{,])\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'"\1":', raw)
-
-    # Stap 6: dubbele double quotes rechtzetten (als een key al quotes had)
-    raw = re.sub(r'""([^"]+)""', r'"\1"', raw)
-
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError as e:
-        print(f"❌ Parse fout in '{var_name}': {e}")
-        # Toon de exacte plek van de fout
-        lines = raw.splitlines()
-        for i, line in enumerate(lines, 1):
-            print(f"  {i:>3}: {line}")
-        raise
-
-def replace_js_array(html: str, var_name: str, new_data: list) -> str:
-    items = []
-    for item in new_data:
-        pairs = []
-        for k, v in item.items():
-            if isinstance(v, list):
-                inner = ','.join(f"'{x}'" for x in v)
-                pairs.append(f"{k}:[{inner}]")
-            else:
-                val = str(v).replace("'", "\\'")
-                pairs.append(f"{k}:'{val}'")
-        items.append('{' + ','.join(pairs) + '}')
-    new_array = '[' + ','.join(items) + ']'
-    pattern = rf'(const {var_name} = )(\[.*?\]);'
-    return re.sub(pattern, rf'\g<1>{new_array};', html, flags=re.DOTALL)
-
-# ============================================================
-# SYNCHRONISATIE — met niveau veld
-# ============================================================
-
-def sync_words_from_csv():
-    """Synchroniseer ALLE woorden uit CSV, met niveau erbij."""
-    html = read_html()
-    current = extract_js_array(html, 'words')
-    bestaande = {w['word'] for w in current}
-
-    nieuw = 0
-    for row in get_words_from_csv():
-        if row['woord'] in bestaande:
-            continue
-        current.append({
+        result.append({
             'word':    row['woord'],
             'emoji':   row['emoji'],
             'meaning': row['nl'],
-            'niveau':  row['niveau'],   # ← nieuw: niveau meeschrijven
+            'niveau':  row['niveau'],
         })
-        bestaande.add(row['woord'])
-        print(f"  ➕ [{row['niveau']:>5}] {row['emoji']}  {row['woord']} = {row['nl']}")
-        nieuw += 1
+    return result
 
-    if nieuw == 0:
-        print("✅ Alle woorden staan al in de app.")
-        return
 
-    html = replace_js_array(html, 'words', current)
-    html = update_date_stamp(html)
-    write_html(html)
-    print(f"\n✅ {nieuw} nieuwe woorden toegevoegd.")
-
-def sync_speak_from_csv():
-    """Voeg zinnen toe als spreekoefeningen, met niveau."""
-    html = read_html()
-    current = extract_js_array(html, 'speakExercises')
-    bestaande = {e['target'] for e in current}
-
-    nieuw = 0
-    for row in get_sentences_from_csv():
-        if row['woord'] in bestaande:
+def build_speak_exercises(rows: list[dict]) -> list[dict]:
+    """Zinnen als spreekoefeningen, met niveau."""
+    seen = set()
+    result = []
+    for row in rows:
+        if row['type'] != 'zin':
             continue
-        current.append({
+        key = row['woord']
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append({
             'target': row['woord'],
-            'niveau': row['niveau'],   # ← nieuw: niveau meeschrijven
+            'niveau': row['niveau'],
         })
-        bestaande.add(row['woord'])
-        print(f"  ➕ 🎤  [{row['niveau']}]  {row['woord']}")
-        nieuw += 1
+    return result
 
-    if nieuw == 0:
-        print("✅ Alle zinnen staan al als spreekoefening.")
-        return
 
-    html = replace_js_array(html, 'speakExercises', current)
-    html = update_date_stamp(html)
-    write_html(html)
-    print(f"\n✅ {nieuw} nieuwe spreekoefeningen toegevoegd.")
+def build_read_exercises(rows: list[dict]) -> list[dict]:
+    """
+    Leesoefeningen: voor elk woord een meerkeuzevraag.
+    Afleidopties worden gekozen uit andere woorden van hetzelfde niveau.
+    """
+    import random
+    random.seed(42)  # reproduceerbaar
+
+    woorden = [r for r in rows if r['type'] == 'woord']
+    seen = set()
+    result = []
+
+    for row in woorden:
+        key = row['woord']
+        if key in seen:
+            continue
+        seen.add(key)
+
+        # Kies twee afleidopties uit hetzelfde niveau (of all)
+        pool = [r['woord'] for r in woorden
+                if r['woord'] != key and r['niveau'] == row['niveau']]
+        if len(pool) < 2:
+            pool = [r['woord'] for r in woorden if r['woord'] != key]
+        distractors = random.sample(pool, min(2, len(pool)))
+        options = distractors + [key]
+        random.shuffle(options)
+
+        result.append({
+            'word':    key,
+            'emoji':   row['emoji'],
+            'hint':    f"Hint: {row['nl']}.",
+            'options': options,
+            'niveau':  row['niveau'],
+        })
+    return result
+
+
+def build_write_exercises(rows: list[dict]) -> list[dict]:
+    """
+    Schrijfoefeningen: voor elk woord letters + voorbeeldzin.
+    Letters = unieke letters van het woord, aangevuld met willekeurige extra's.
+    """
+    import random
+    random.seed(42)
+
+    extra_pool = list('abcdefghijklmnoprstuw')
+    woorden = [r for r in rows if r['type'] == 'woord']
+    seen = set()
+    result = []
+
+    for row in woorden:
+        key = row['woord']
+        if key in seen:
+            continue
+        seen.add(key)
+
+        # Basisletters uit het woord (zonder spaties)
+        base_letters = list(key.replace(' ', ''))
+        # Voeg 2-3 willekeurige extra letters toe als afleidopties
+        extras = [c for c in extra_pool if c not in base_letters]
+        extra_count = min(3, len(extras))
+        distractors = random.sample(extras, extra_count)
+        letters = base_letters + distractors
+        random.shuffle(letters)
+
+        result.append({
+            'word':    key,
+            'hint':    f"Tip: {row['nl']}.",
+            'letters': letters,
+            'sample':  f"Mi ta {key}.",   # eenvoudige voorbeeldzin
+            'niveau':  row['niveau'],
+        })
+    return result
+
 
 # ============================================================
-# HANDMATIG TOEVOEGEN
+# DATA.JS SCHRIJVEN
 # ============================================================
 
-def add_word_card(word: str, emoji: str, meaning: str, niveau: str = 'all'):
-    html = read_html()
-    words = extract_js_array(html, 'words')
-    if any(w['word'] == word for w in words):
-        print(f"⚠️  '{word}' staat al in de woordenlijst.")
-        return
-    words.append({'word': word, 'emoji': emoji, 'meaning': meaning, 'niveau': niveau})
-    html = replace_js_array(html, 'words', words)
-    html = update_date_stamp(html)
-    write_html(html)
-    print(f"✅ Woord '{word}' ({emoji} = {meaning}) toegevoegd.")
+def write_data_js(words, read_ex, write_ex, speak_ex):
+    today = date.today().isoformat()
+    content = f"""// data.js — automatisch gegenereerd door update_index.py op {today}
+// Bron: aruba_papiamento_db_structuur.csv
+// Pas dit bestand NIET handmatig aan; draai update_index.py opnieuw.
 
-def add_read_exercise(word: str, emoji: str, hint: str, options: list, niveau: str = 'all'):
-    if word not in options:
-        options.append(word)
-    html = read_html()
-    exercises = extract_js_array(html, 'readExercises')
-    if any(e['word'] == word for e in exercises):
-        print(f"⚠️  Leesoefening '{word}' bestaat al.")
-        return
-    exercises.append({'word': word, 'emoji': emoji, 'hint': hint,
-                      'options': options[:3], 'niveau': niveau})
-    html = replace_js_array(html, 'readExercises', exercises)
-    html = update_date_stamp(html)
-    write_html(html)
-    print(f"✅ Leesoefening '{word}' toegevoegd.")
+const words = {json.dumps(words, ensure_ascii=False, indent=2)};
 
-def add_speak_exercise(target: str, niveau: str = 'all'):
-    html = read_html()
-    exercises = extract_js_array(html, 'speakExercises')
-    if any(e['target'] == target for e in exercises):
-        print(f"⚠️  Spreekoefening '{target}' bestaat al.")
-        return
-    exercises.append({'target': target, 'niveau': niveau})
-    html = replace_js_array(html, 'speakExercises', exercises)
-    html = update_date_stamp(html)
-    write_html(html)
-    print(f"✅ Spreekoefening '{target}' toegevoegd.")
+const readExercises = {json.dumps(read_ex, ensure_ascii=False, indent=2)};
 
-def add_write_exercise(word: str, hint: str, letters: list, sample: str, niveau: str = 'all'):
-    html = read_html()
-    exercises = extract_js_array(html, 'writeExercises')
-    if any(e['word'] == word for e in exercises):
-        print(f"⚠️  Schrijfoefening '{word}' bestaat al.")
-        return
-    exercises.append({'word': word, 'hint': hint, 'letters': letters,
-                      'sample': sample, 'niveau': niveau})
-    html = replace_js_array(html, 'writeExercises', exercises)
-    html = update_date_stamp(html)
-    write_html(html)
-    print(f"✅ Schrijfoefening '{word}' toegevoegd.")
+const writeExercises = {json.dumps(write_ex, ensure_ascii=False, indent=2)};
+
+const speakExercises = {json.dumps(speak_ex, ensure_ascii=False, indent=2)};
+"""
+    DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    DATA_FILE.write_text(content, encoding='utf-8')
+    print(f"✅ {DATA_FILE} geschreven ({DATA_FILE.stat().st_size} bytes)")
+
 
 # ============================================================
 # OVERZICHT
 # ============================================================
 
-def list_all_words():
-    html = read_html()
-    words = extract_js_array(html, 'words')
-    print(f"\n📋 Huidige woordkaartjes in app ({len(words)} stuks):")
-    for i, w in enumerate(words, 1):
-        niveau = w.get('niveau', '?')
-        print(f"  {i:>2}. [{niveau:>5}] {w['emoji']}  {w['word']:<20} = {w['meaning']}")
+def preview(words, read_ex, write_ex, speak_ex):
+    print(f"\n📊 Samenvatting:")
+    print(f"  🗂️  Woordkaartjes      : {len(words)}")
+    print(f"  📖 Leesoefeningen     : {len(read_ex)}")
+    print(f"  ✏️  Schrijfoefeningen  : {len(write_ex)}")
+    print(f"  🎤 Spreekoefeningen   : {len(speak_ex)}")
+
+    niveaus = {}
+    for w in words:
+        n = w.get('niveau', '?')
+        niveaus[n] = niveaus.get(n, 0) + 1
+    print(f"\n  Per niveau (woorden):")
+    for n, count in sorted(niveaus.items()):
+        print(f"    [{n:>5}]  {count} woorden")
     print()
 
-def preview_csv():
-    rows = load_csv()
-    print(f"\n📄 CSV bevat {len(rows)} rijen:\n")
-    for row in rows:
-        print(f"  [{row['niveau']:>5}] {row['type']:<5}  {row['emoji']}  "
-              f"{row['woord']:<25} = {row['nl']}")
-    print()
 
 # ============================================================
 # HOOFDPROGRAMMA
@@ -277,18 +208,18 @@ if __name__ == '__main__':
     print("  Papiaments Leeravontuur — update_index.py")
     print("=" * 55)
 
-    preview_csv()
-    list_all_words()
+    rows = load_csv()
+    print(f"\n📄 CSV geladen: {len(rows)} rijen")
 
-    print("📥 Alle woorden synchroniseren vanuit CSV...")
-    sync_words_from_csv()
+    words      = build_words(rows)
+    read_ex    = build_read_exercises(rows)
+    write_ex   = build_write_exercises(rows)
+    speak_ex   = build_speak_exercises(rows)
 
-    print("\n🎤 Zinnen toevoegen als spreekoefeningen...")
-    sync_speak_from_csv()
+    preview(words, read_ex, write_ex, speak_ex)
+    write_data_js(words, read_ex, write_ex, speak_ex)
 
-    list_all_words()
-
-    print("✅ Klaar! Push nu naar GitHub:")
-    print("   git add update_index.py")
-    print("   git commit -m 'Niveau-filter toegevoegd'")
+    print("\n✅ Klaar! Push nu naar GitHub:")
+    print("   git add docs/data.js update_index.py")
+    print("   git commit -m 'Data extern via data.js, gegenereerd uit CSV'")
     print("   git push")
