@@ -4,27 +4,28 @@ from datetime import datetime
 
 @dataclass
 class User:
-    nickname:   str
+    name:       str
     avatar:     str = '🧒'
+    niveau:     str = '4-6'
     id:         int = 0
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    last_seen:  str = field(default_factory=lambda: datetime.now().isoformat())
 
 
 @dataclass
-class Score:
-    user_id:  int
-    skill:    str   # 'lezen' | 'schrijven' | 'spreken'
-    niveau:   str   # '4-6' | '6-8' | '8-10' | '10' | 'all'
-    stars:    int = 0
-    correct:  int = 0
-    attempts: int = 0
+class WordScore:
+    user_id:    int
+    word:       str
+    skill:      str   # 'lezen' | 'schrijven' | 'spreken'
+    correct:    bool
+    niveau:     str
+    session_id: int | None = None
 
 
 @dataclass
-class Session:
-    user_id:  int
-    word:     str
-    skill:    str
-    result:   str   # 'correct' | 'fout'
-    heard_as: str = ''
+class SkillTotal:
+    user_id:       int
+    skill:         str
+    niveau:        str
+    correct_total: int = 0
+    wrong_total:   int = 0
+    streak:        int = 0

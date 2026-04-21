@@ -1,41 +1,40 @@
--- Gebruikers
+-- Kinderen
 CREATE TABLE IF NOT EXISTS users (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    nickname    TEXT    NOT NULL UNIQUE,
-    avatar      TEXT    DEFAULT '🧒',
-    created_at  TEXT    DEFAULT (datetime('now')),
-    last_seen   TEXT    DEFAULT (datetime('now'))
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT    NOT NULL UNIQUE,
+    avatar     TEXT    DEFAULT '🧒',
+    niveau     TEXT    DEFAULT '4-6',
+    created_at TEXT    DEFAULT (datetime('now'))
 );
 
--- Scores per vaardigheid per niveau
-CREATE TABLE IF NOT EXISTS scores (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id     INTEGER NOT NULL REFERENCES users(id),
-    skill       TEXT    NOT NULL CHECK(skill IN ('lezen','schrijven','spreken')),
-    niveau      TEXT    NOT NULL,
-    stars       INTEGER DEFAULT 0,
-    correct     INTEGER DEFAULT 0,
-    attempts    INTEGER DEFAULT 0,
-    updated_at  TEXT    DEFAULT (datetime('now')),
-    UNIQUE(user_id, skill, niveau)
-);
-
--- Individuele oefensessies (voor voortgang per woord)
+-- Oefensessies
 CREATE TABLE IF NOT EXISTS sessions (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id     INTEGER NOT NULL REFERENCES users(id),
-    word        TEXT    NOT NULL,
-    skill       TEXT    NOT NULL,
-    result      TEXT    NOT NULL CHECK(result IN ('correct','fout')),
-    heard_as    TEXT,
-    played_at   TEXT    DEFAULT (datetime('now'))
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id        INTEGER NOT NULL REFERENCES users(id),
+    started_at     TEXT    DEFAULT (datetime('now')),
+    ended_at       TEXT,
+    exercises_done INTEGER DEFAULT 0
 );
 
--- Woorden die een kind moeilijk vindt (voor herhaling)
-CREATE TABLE IF NOT EXISTS weak_words (
-    user_id     INTEGER NOT NULL REFERENCES users(id),
-    word        TEXT    NOT NULL,
-    miss_count  INTEGER DEFAULT 1,
-    last_missed TEXT    DEFAULT (datetime('now')),
-    PRIMARY KEY (user_id, word)
+-- Individuele antwoorden (goed/fout per woord per vaardigheid)
+CREATE TABLE IF NOT EXISTS word_scores (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id),
+    session_id INTEGER REFERENCES sessions(id),
+    word       TEXT    NOT NULL,
+    skill      TEXT    NOT NULL CHECK(skill IN ('lezen','schrijven','spreken')),
+    correct    INTEGER NOT NULL CHECK(correct IN (0,1)),
+    niveau     TEXT    NOT NULL,
+    last_seen  TEXT    DEFAULT (datetime('now'))
+);
+
+-- Lopende totalen per gebruiker × vaardigheid × niveau
+CREATE TABLE IF NOT EXISTS skill_totals (
+    user_id       INTEGER NOT NULL REFERENCES users(id),
+    skill         TEXT    NOT NULL CHECK(skill IN ('lezen','schrijven','spreken')),
+    niveau        TEXT    NOT NULL,
+    correct_total INTEGER DEFAULT 0,
+    wrong_total   INTEGER DEFAULT 0,
+    streak        INTEGER DEFAULT 0,
+    PRIMARY KEY (user_id, skill, niveau)
 );

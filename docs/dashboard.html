@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voortgangsdashboard — Papiamento Leeravontuur</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet" />
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem); --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem); --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem); --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem;
+      --color-bg:#fff8ef; --color-surface:#fffdf9; --color-surface-2:#fff5ea; --color-surface-offset:#f8eadc; --color-border:#e8d5c0; --color-divider:#eadccb;
+      --color-text:#2f2418; --color-text-muted:#6e6256; --color-text-faint:#9d9082; --color-text-inverse:#fffdf8;
+      --color-primary:#0b8f8c; --color-primary-hover:#0a7674; --color-primary-active:#08595a; --color-primary-highlight:#d8f1ee;
+      --color-secondary:#f39c3d; --color-secondary-soft:#ffe0b5; --color-success:#5e9d35; --color-error:#c55a4b; --color-purple:#8c68d9;
+      --radius-sm:.5rem; --radius-md:.9rem; --radius-lg:1.3rem; --radius-xl:1.8rem; --radius-full:9999px;
+      --shadow-sm:0 2px 8px rgba(98,64,24,.08); --shadow-md:0 10px 30px rgba(98,64,24,.12);
+      --transition:180ms cubic-bezier(.16,1,.3,1);
+      --font-body:'Satoshi','Inter',sans-serif; --font-display:'Cabinet Grotesk','Trebuchet MS',sans-serif;
+    }
+    [data-theme="dark"] {
+      --color-bg:#181411; --color-surface:#211c18; --color-surface-2:#2a241f; --color-surface-offset:#302922; --color-border:#4a4036;
+      --color-text:#f7ede1; --color-text-muted:#c6b7a8; --color-text-faint:#938475; --color-text-inverse:#1a1612;
+      --color-primary:#5accc8; --color-primary-hover:#3eb3af; --color-primary-active:#2c8b88; --color-primary-highlight:#2e3f3f;
+      --color-secondary:#f6b35f; --color-secondary-soft:#4d3821; --color-success:#8fd05d; --color-error:#ef8a7d;
+      --shadow-sm:0 2px 10px rgba(0,0,0,.22); --shadow-md:0 16px 38px rgba(0,0,0,.3);
+    }
+    *, *::before, *::after { box-sizing:border-box; }
+    body { margin:0; min-height:100dvh; font-family:var(--font-body); font-size:var(--text-base); line-height:1.6; color:var(--color-text); background:radial-gradient(circle at top right,rgba(243,156,61,.12),transparent 30%),radial-gradient(circle at top left,rgba(11,143,140,.12),transparent 35%),var(--color-bg); }
+    button { cursor:pointer; border:none; font:inherit; }
+    h1,h2,h3 { font-family:var(--font-display); margin:0; line-height:1.1; }
+    h1 { font-size:var(--text-xl); } h2 { font-size:var(--text-lg); } h3 { font-size:1.15rem; }
+    p { margin:0; color:var(--color-text-muted); }
+    .shell { max-width:1120px; margin:0 auto; padding:var(--space-4); display:grid; gap:var(--space-6); }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); padding:var(--space-4) 0 var(--space-6); }
+    .brand { display:flex; align-items:center; gap:var(--space-3); text-decoration:none; color:inherit; }
+    .logo { width:54px; height:54px; border-radius:18px; background:linear-gradient(135deg,var(--color-primary),var(--color-secondary)); color:white; display:grid; place-items:center; box-shadow:var(--shadow-sm); flex:0 0 auto; }
+    .brand-title { font-family:var(--font-display); font-size:var(--text-lg); line-height:1; }
+    .brand-sub { font-size:var(--text-xs); color:var(--color-text-muted); }
+    .theme-toggle { min-height:44px; border-radius:var(--radius-full); padding:0 var(--space-4); background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text); box-shadow:var(--shadow-sm); }
+    .layout { display:grid; grid-template-columns:minmax(200px,260px) minmax(0,1fr); gap:var(--space-6); align-items:start; }
+    .sidebar { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:var(--space-5); position:sticky; top:var(--space-4); display:grid; gap:var(--space-4); }
+    .panel { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:var(--space-6); display:grid; gap:var(--space-6); }
+    .student-btn { width:100%; text-align:left; padding:var(--space-3) var(--space-4); border-radius:var(--radius-lg); border:1px solid var(--color-border); background:var(--color-surface-2); display:flex; align-items:center; gap:var(--space-3); font-weight:700; color:var(--color-text); transition:background var(--transition),border-color var(--transition); }
+    .student-btn:hover { background:var(--color-primary-highlight); border-color:var(--color-primary); }
+    .student-btn.active { background:var(--color-primary-highlight); border-color:var(--color-primary); }
+    .student-avatar { font-size:1.6rem; }
+    .dash-header { display:flex; align-items:center; gap:var(--space-4); padding-bottom:var(--space-4); border-bottom:1px solid var(--color-divider); }
+    .dash-avatar { font-size:3rem; }
+    .dash-meta { color:var(--color-text-muted); font-size:var(--text-sm); }
+    .totals-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:var(--space-4); }
+    .total-card { padding:var(--space-4); background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-lg); text-align:center; }
+    .total-num { font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--color-primary); }
+    .total-label { font-size:var(--text-sm); color:var(--color-text-muted); }
+    .skill-table { width:100%; border-collapse:collapse; font-size:var(--text-sm); }
+    .skill-table th { text-align:left; padding:var(--space-3) var(--space-4); background:var(--color-surface-offset); font-weight:700; border-bottom:1px solid var(--color-divider); }
+    .skill-table td { padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-divider); }
+    .skill-table tr:last-child td { border-bottom:none; }
+    .ratio-bar { height:8px; background:var(--color-surface-offset); border-radius:999px; overflow:hidden; min-width:80px; }
+    .ratio-fill { height:100%; background:linear-gradient(90deg,var(--color-secondary),var(--color-primary)); border-radius:999px; transition:width 500ms ease; }
+    .badge { display:inline-flex; align-items:center; padding:0.15rem var(--space-2); border-radius:var(--radius-full); font-size:.75rem; font-weight:700; }
+    .badge-green { background:#e1f6e4; color:#3a7d2a; }
+    .badge-red   { background:#ffe3de; color:#9c2f25; }
+    .badge-grey  { background:var(--color-surface-offset); color:var(--color-text-muted); }
+    .weak-list { display:grid; gap:var(--space-3); }
+    .weak-item { display:flex; justify-content:space-between; align-items:center; padding:var(--space-3) var(--space-4); background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-md); }
+    .weak-word { font-weight:700; }
+    .weak-meta { font-size:var(--text-sm); color:var(--color-text-muted); }
+    .niveau-progress-list { display:grid; gap:var(--space-4); }
+    .niveau-row { display:grid; gap:var(--space-2); }
+    .niveau-label-row { display:flex; justify-content:space-between; font-size:var(--text-sm); font-weight:700; }
+    .niveau-bar { height:12px; background:var(--color-surface-offset); border-radius:999px; overflow:hidden; }
+    .niveau-fill { height:100%; background:linear-gradient(90deg,var(--color-secondary),var(--color-primary)); border-radius:999px; transition:width 600ms ease; }
+    .empty-state { text-align:center; padding:var(--space-8); color:var(--color-text-muted); }
+    .section-title { font-family:var(--font-display); font-size:1.05rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+    @media (max-width:900px) { .layout { grid-template-columns:1fr; } .sidebar { position:static; } }
+    @media (max-width:640px) { .totals-row { grid-template-columns:1fr; } .shell { padding:var(--space-3); } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">
+        <div class="logo" aria-hidden="true"><svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M11 29C11 18.5 18.5 11 29 11h7v7c0 10.5-7.5 18-18 18h-7v-7Z" fill="currentColor" opacity="0.95"/><path d="M14 31c7-1 11-5 12-12" stroke="white" stroke-width="3.2" stroke-linecap="round"/></svg></div>
+        <div><div class="brand-title">Voortgangsdashboard</div><div class="brand-sub">Papiamento Leeravontuur — leerkracht &amp; ouderweergave</div></div>
+      </a>
+      <button class="theme-toggle" id="themeToggle" aria-label="Zet donker thema aan">🌙 Thema</button>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" aria-label="Kinderen">
+        <h3>Kinderen</h3>
+        <div id="studentList"><p class="empty-state">Even laden…</p></div>
+      </aside>
+
+      <main class="panel" id="mainPanel">
+        <div class="empty-state" id="noSelection">
+          <p style="font-size:2rem;margin-bottom:var(--space-4);">👈</p>
+          <p>Kies een kind links om de voortgang te bekijken.</p>
+        </div>
+        <div id="dashContent" style="display:none;">
+          <div class="dash-header">
+            <div class="dash-avatar" id="dashAvatar">🧒</div>
+            <div>
+              <h2 id="dashName">—</h2>
+              <div class="dash-meta" id="dashMeta">—</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title" style="margin-bottom:var(--space-4);">Totaaloverzicht</div>
+            <div class="totals-row">
+              <div class="total-card"><div class="total-num" id="totalCorrect">0</div><div class="total-label">Goed beantwoord</div></div>
+              <div class="total-card"><div class="total-num" id="totalAttempts">0</div><div class="total-label">Totaal pogingen</div></div>
+              <div class="total-card"><div class="total-num" id="totalRatio">—</div><div class="total-label">Slagingspercentage</div></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title" style="margin-bottom:var(--space-4);">Per niveau</div>
+            <div class="niveau-progress-list" id="niveauProgress"></div>
+          </div>
+
+          <div>
+            <div class="section-title" style="margin-bottom:var(--space-4);">Per vaardigheid</div>
+            <table class="skill-table">
+              <thead><tr><th>Vaardigheid</th><th>Niveau</th><th>Goed</th><th>Fout</th><th>Reeks</th><th>Score</th><th></th></tr></thead>
+              <tbody id="skillTableBody"></tbody>
+            </table>
+          </div>
+
+          <div>
+            <div class="section-title" style="margin-bottom:var(--space-4);">Moeilijke woorden 🔁</div>
+            <div id="weakWordsList" class="weak-list"></div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ── Thema ──────────────────────────────────────────────────────
+    let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      document.getElementById('themeToggle').textContent = t === 'dark' ? '☀️ Thema' : '🌙 Thema';
+    }
+    applyTheme(theme);
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      applyTheme(theme);
+    });
+
+    // ── API ────────────────────────────────────────────────────────
+    async function apiFetch(path) {
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(res.status);
+        return await res.json();
+      } catch (e) {
+        console.warn('[API]', path, e.message);
+        return null;
+      }
+    }
+
+    // ── Studenten sidebar ──────────────────────────────────────────
+    let activeUserId = null;
+
+    async function loadStudents() {
+      const users = await apiFetch('/api/users');
+      const list  = document.getElementById('studentList');
+      if (!users || users.length === 0) {
+        list.innerHTML = '<p class="empty-state">Nog geen kinderen aangemeld.<br>Start de app en maak een profiel aan.</p>';
+        return;
+      }
+      list.innerHTML = '';
+      users.forEach(u => {
+        const btn = document.createElement('button');
+        btn.className = 'student-btn';
+        btn.dataset.id = u.id;
+        btn.innerHTML = `<span class="student-avatar">${u.avatar}</span><span>${u.name}</span>`;
+        btn.addEventListener('click', () => loadDashboard(u.id));
+        list.appendChild(btn);
+      });
+    }
+
+    // ── Dashboard ──────────────────────────────────────────────────
+    const SKILL_NL = { lezen: '📖 Lezen', schrijven: '✍️ Schrijven', spreken: '🎤 Spreken' };
+
+    async function loadDashboard(userId) {
+      activeUserId = userId;
+      document.querySelectorAll('.student-btn').forEach(b =>
+        b.classList.toggle('active', +b.dataset.id === userId));
+
+      const d = await apiFetch(`/api/users/${userId}/dashboard`);
+      if (!d) return;
+
+      document.getElementById('noSelection').style.display  = 'none';
+      document.getElementById('dashContent').style.display  = 'grid';
+
+      document.getElementById('dashAvatar').textContent = d.user.avatar;
+      document.getElementById('dashName').textContent   = d.user.name;
+      document.getElementById('dashMeta').textContent   =
+        `Niveau: ${d.user.niveau} · Aangemeld: ${d.user.created_at.slice(0,10)}`;
+
+      document.getElementById('totalCorrect').textContent  = d.total_correct;
+      document.getElementById('totalAttempts').textContent = d.total_attempts;
+      const pct = d.total_attempts > 0
+        ? Math.round(d.total_correct / d.total_attempts * 100) + '%'
+        : '—';
+      document.getElementById('totalRatio').textContent = pct;
+
+      // Niveau progress
+      const npEl = document.getElementById('niveauProgress');
+      npEl.innerHTML = '';
+      if (d.niveau_progress.length === 0) {
+        npEl.innerHTML = '<p class="empty-state">Nog geen oefeningen gedaan.</p>';
+      } else {
+        d.niveau_progress.forEach(n => {
+          const div = document.createElement('div');
+          div.className = 'niveau-row';
+          div.innerHTML = `
+            <div class="niveau-label-row">
+              <span>${n.niveau === 'all' ? 'Algemeen' : n.niveau + ' jaar'}</span>
+              <span>${n.correct}/${n.total} (${Math.round(n.ratio * 100)}%)</span>
+            </div>
+            <div class="niveau-bar"><div class="niveau-fill" style="width:${Math.round(n.ratio*100)}%"></div></div>`;
+          npEl.appendChild(div);
+        });
+      }
+
+      // Skill table
+      const tbody = document.getElementById('skillTableBody');
+      tbody.innerHTML = '';
+      if (d.skill_totals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--color-text-muted);padding:1.5rem">Nog geen scores.</td></tr>';
+      } else {
+        d.skill_totals.forEach(s => {
+          const pct = Math.round(s.ratio * 100);
+          let badgeClass = 'badge-grey', badgeLabel = 'bezig';
+          if (s.correct_total + s.wrong_total >= 3) {
+            if (s.ratio >= 0.75) { badgeClass = 'badge-green'; badgeLabel = 'sterk'; }
+            else if (s.ratio < 0.50) { badgeClass = 'badge-red'; badgeLabel = 'herhalen'; }
+          }
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${SKILL_NL[s.skill] || s.skill}</td>
+            <td>${s.niveau}</td>
+            <td style="color:var(--color-success);font-weight:700">${s.correct_total}</td>
+            <td style="color:var(--color-error);font-weight:700">${s.wrong_total}</td>
+            <td>${s.streak > 0 ? '🔥 ' + s.streak : '—'}</td>
+            <td><div class="ratio-bar"><div class="ratio-fill" style="width:${pct}%"></div></div></td>
+            <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Weak words
+      const wwEl = document.getElementById('weakWordsList');
+      wwEl.innerHTML = '';
+      if (d.weak_words.length === 0) {
+        wwEl.innerHTML = '<p class="empty-state">Geen moeilijke woorden gevonden — goed bezig! 🎉</p>';
+      } else {
+        d.weak_words.forEach(w => {
+          const div = document.createElement('div');
+          div.className = 'weak-item';
+          div.innerHTML = `
+            <div>
+              <div class="weak-word">${w.word}</div>
+              <div class="weak-meta">${SKILL_NL[w.skill] || w.skill} · niveau ${w.niveau}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:700;color:var(--color-error)">${w.wrong_total}×</div>
+              <div class="weak-meta">fout</div>
+            </div>`;
+          wwEl.appendChild(div);
+        });
+      }
+    }
+
+    // ── Init ───────────────────────────────────────────────────────
+    loadStudents();
+  </script>
+</body>
+</html>

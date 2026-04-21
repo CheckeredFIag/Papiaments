@@ -125,9 +125,44 @@
     .niveau-btn { min-height:40px; padding:0 var(--space-4); border-radius:var(--radius-full); border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); font-weight:700; font-size:var(--text-sm); transition: background var(--transition-interactive), color var(--transition-interactive); }
     .niveau-btn:hover { background:var(--color-primary-highlight); }
     .niveau-btn.active { background:var(--color-primary); color:var(--color-text-inverse); border-color:var(--color-primary); }
+    /* ── User Picker ──────────────────────────────────────────── */
+    .user-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:grid; place-items:center; z-index:200; padding:var(--space-4); backdrop-filter:blur(2px); }
+    .user-picker-overlay.hidden { display:none; }
+    .user-picker-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-md); padding:var(--space-8); max-width:480px; width:100%; display:grid; gap:var(--space-5); text-align:center; }
+    .picker-logo { width:54px; height:54px; border-radius:18px; background:linear-gradient(135deg,var(--color-primary),var(--color-secondary)); color:white; display:grid; place-items:center; box-shadow:var(--shadow-sm); margin:0 auto; }
+    .picker-user-list { display:flex; flex-wrap:wrap; gap:var(--space-3); justify-content:center; min-height:56px; }
+    .picker-user-btn { display:flex; flex-direction:column; align-items:center; gap:var(--space-2); padding:var(--space-4) var(--space-5); border-radius:var(--radius-lg); border:2px solid var(--color-border); background:var(--color-surface-2); cursor:pointer; font-weight:700; font-family:var(--font-body); font-size:var(--text-sm); transition:border-color var(--transition-interactive),background var(--transition-interactive); }
+    .picker-user-btn:hover { border-color:var(--color-primary); background:var(--color-primary-highlight); }
+    .picker-user-avatar { font-size:2rem; }
+    .picker-divider { display:flex; align-items:center; gap:var(--space-3); color:var(--color-text-muted); font-size:var(--text-sm); }
+    .picker-divider::before,.picker-divider::after { content:''; flex:1; height:1px; background:var(--color-border); }
+    .picker-new-form { display:grid; gap:var(--space-3); text-align:left; }
+    .picker-avatar-row { display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; }
+    .picker-avatar-btn { font-size:1.6rem; width:48px; height:48px; border-radius:50%; border:2px solid var(--color-border); background:var(--color-surface-2); cursor:pointer; transition:border-color var(--transition-interactive),transform var(--transition-interactive); }
+    .picker-avatar-btn:hover { transform:scale(1.1); }
+    .picker-avatar-btn.selected { border-color:var(--color-primary); background:var(--color-primary-highlight); }
+    .picker-input { width:100%; height:48px; border-radius:var(--radius-full); border:1px solid var(--color-border); padding:0 var(--space-5); background:var(--color-surface); color:var(--color-text); font-size:var(--text-base); font-family:var(--font-body); }
+    .picker-input:focus { outline:3px solid var(--color-secondary); outline-offset:2px; }
+    .picker-empty { color:var(--color-text-muted); font-size:var(--text-sm); padding:var(--space-3); }
   </style>
 </head>
 <body>
+  <!-- ── User Picker overlay ── -->
+  <div id="userPickerOverlay" class="user-picker-overlay" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+    <div class="user-picker-card">
+      <div class="picker-logo" aria-hidden="true"><svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M11 29C11 18.5 18.5 11 29 11h7v7c0 10.5-7.5 18-18 18h-7v-7Z" fill="currentColor" opacity="0.95"/><path d="M14 31c7-1 11-5 12-12" stroke="white" stroke-width="3.2" stroke-linecap="round"/></svg></div>
+      <h2 id="pickerTitle" style="font-size:var(--text-lg);">Wie gaat er oefenen? 🌟</h2>
+      <div id="pickerUserList" class="picker-user-list"><span class="picker-empty">Even laden…</span></div>
+      <div class="picker-divider">of maak een nieuw profiel aan</div>
+      <div class="picker-new-form">
+        <div class="picker-avatar-row" id="pickerAvatarRow"></div>
+        <input id="pickerName" type="text" class="picker-input" placeholder="Jouw naam…" maxlength="20" autocomplete="off" />
+        <button id="pickerCreateBtn" class="btn btn-primary" style="width:100%">Start oefenen! 🚀</button>
+      </div>
+      <button id="pickerSkipBtn" class="btn btn-ghost" style="width:100%;opacity:0.65;font-size:var(--text-sm)">Sla over — scores worden niet opgeslagen</button>
+    </div>
+  </div>
+
   <a class="skip-link" href="#main-content">Ga naar de les</a>
   <div class="app-shell">
     <header class="topbar">
@@ -174,6 +209,32 @@
     const appState = { stars: 0, read: 0, write: 0, speak: 0, completed: new Set(), theme: 'light' };
     let readIndex = 0, writeIndex = 0, speakIndex = 0;
     let recognition = null, isListening = false, speechSupported = false, pressTimer = null;
+    let currentUser = null, currentSessionId = null;
+
+    // ── API ────────────────────────────────────────────────────────
+    async function apiFetch(path, opts = {}) {
+      try {
+        const res = await fetch(path, {
+          headers: { 'Content-Type': 'application/json', ...opts.headers },
+          ...opts,
+        });
+        if (!res.ok) throw new Error(res.status);
+        return await res.json();
+      } catch { return null; }
+    }
+
+    async function postScore(word, skill, correct, niveau) {
+      if (!currentUser) return;
+      const skillMap = { read: 'lezen', write: 'schrijven', speak: 'spreken' };
+      await apiFetch('/api/score', {
+        method: 'POST',
+        body: JSON.stringify({
+          user_id: currentUser.id, word,
+          skill: skillMap[skill], correct, niveau,
+          session_id: currentSessionId,
+        }),
+      });
+    }
 
     const navButtons   = [...document.querySelectorAll('.nav-btn')];
     const sections     = [...document.querySelectorAll('.panel-section')];
@@ -322,6 +383,7 @@
             ? `Goed gedaan! ${ex.word} is goed. Nieuw woord komt eraan...`
             : `Bijna! Het goede woord is ${ex.word}. Kies nu zelf voor een nieuw woord.`;
           speakText(ex.word);
+          postScore(ex.word, 'read', ok, ex.niveau);
           if (ok && !appState.completed.has('read-' + readIndex)) {
             appState.completed.add('read-' + readIndex);
             addStar('read');
@@ -399,6 +461,7 @@
       feedback.textContent = ok
         ? `Super! Je hebt "${ex.word}" goed geschreven.`
         : `Probeer het woord "${ex.word}" in je zin te gebruiken.`;
+      postScore(ex.word, 'write', ok, ex.niveau);
       if (ok && !appState.completed.has('write-' + writeIndex)) {
         appState.completed.add('write-' + writeIndex);
         addStar('write');
@@ -436,8 +499,9 @@
       const result = document.getElementById('speechResult');
       const orb    = document.getElementById('micOrb');
       const btn    = document.getElementById('micBtn');
-      const list   = getFiltered(speakExercises);
-      const target = list[speakIndex % list.length].target;
+      const list    = getFiltered(speakExercises);
+      const speakEx = list[speakIndex % list.length];
+      const target  = speakEx.target;
 
       if (!SR || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
         status.textContent = 'Microfoon-opname lukt hier niet. Gebruik de luisterknop of open deze demo in Chrome of Safari.';
@@ -466,6 +530,7 @@
           status.textContent = ok
             ? 'Yes! Dat klonk goed. Nieuw spreekwoord komt eraan...'
             : 'Bijna! Ik hoorde iets anders. Probeer nog eens of kies een nieuw spreekwoord.';
+          postScore(target, 'speak', ok, speakEx.niveau || 'all');
           if (ok && !appState.completed.has('speak-' + speakIndex)) {
             appState.completed.add('speak-' + speakIndex);
             addStar('speak');
@@ -501,6 +566,92 @@
     micBtn.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); startListening(); } });
     micBtn.addEventListener('keyup',   e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); stopListening(); } });
 
+    // ── User Picker ────────────────────────────────────────────────
+    const AVATARS = ['🧒','👦','👧','🦁','🐘','🦋','🦜','🌺','🐢','🐬'];
+    let pickerAvatar = AVATARS[0];
+
+    async function initUserPicker() {
+      const overlay   = document.getElementById('userPickerOverlay');
+      const listEl    = document.getElementById('pickerUserList');
+      const avatarRow = document.getElementById('pickerAvatarRow');
+      const nameInput = document.getElementById('pickerName');
+      const createBtn = document.getElementById('pickerCreateBtn');
+      const skipBtn   = document.getElementById('pickerSkipBtn');
+
+      AVATARS.forEach(a => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'picker-avatar-btn' + (a === pickerAvatar ? ' selected' : '');
+        btn.textContent = a;
+        btn.addEventListener('click', () => {
+          pickerAvatar = a;
+          avatarRow.querySelectorAll('.picker-avatar-btn').forEach(b =>
+            b.classList.toggle('selected', b.textContent === a));
+        });
+        avatarRow.appendChild(btn);
+      });
+
+      const users = await apiFetch('/api/users');
+      if (users && users.length > 0) {
+        listEl.innerHTML = '';
+        users.forEach(u => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'picker-user-btn';
+          btn.innerHTML = `<span class="picker-user-avatar">${u.avatar}</span><span>${u.name}</span>`;
+          btn.addEventListener('click', () => selectUser(u, overlay));
+          listEl.appendChild(btn);
+        });
+      } else {
+        listEl.innerHTML = '<span class="picker-empty">Nog geen profielen — maak er hieronder één aan.</span>';
+      }
+
+      createBtn.addEventListener('click', async () => {
+        const name = nameInput.value.trim();
+        if (!name) { nameInput.focus(); return; }
+        const user = await apiFetch('/api/users', {
+          method: 'POST',
+          body: JSON.stringify({ name, avatar: pickerAvatar, niveau: activeNiveau === 'all' ? '4-6' : activeNiveau }),
+        });
+        if (user) { selectUser(user, overlay); }
+        else { nameInput.value = ''; nameInput.placeholder = 'Naam al in gebruik, kies een andere'; nameInput.focus(); }
+      });
+      nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') createBtn.click(); });
+      skipBtn.addEventListener('click', () => overlay.classList.add('hidden'));
+    }
+
+    async function selectUser(user, overlay) {
+      currentUser = user;
+      overlay.classList.add('hidden');
+      document.getElementById('welcome-pill').textContent = `${user.avatar} ${user.name}`;
+
+      const session = await apiFetch('/api/session/start', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: user.id }),
+      });
+      if (session) currentSessionId = session.session_id;
+
+      const dash = await apiFetch(`/api/users/${user.id}/dashboard`);
+      if (dash) {
+        const t = { lezen: 0, schrijven: 0, spreken: 0 };
+        dash.skill_totals.forEach(s => { t[s.skill] = (t[s.skill] || 0) + s.correct_total; });
+        appState.read  = t.lezen;
+        appState.write = t.schrijven;
+        appState.speak = t.spreken;
+        appState.stars = dash.total_correct;
+        updateProgress();
+      }
+    }
+
+    window.addEventListener('beforeunload', () => {
+      if (currentUser && currentSessionId) {
+        const done = appState.read + appState.write + appState.speak;
+        navigator.sendBeacon('/api/session/end',
+          new Blob([JSON.stringify({ session_id: currentSessionId, exercises_done: done })],
+            { type: 'application/json' }));
+      }
+    });
+
     // ── Init ───────────────────────────────────────────────────────
     renderNiveauFilter();
     renderReadExercise();
@@ -509,6 +660,7 @@
     renderWordGrid();
     updateSpeechSupportMessage();
     updateProgress();
+    initUserPicker();
   </script>
 </body>
 </html>
