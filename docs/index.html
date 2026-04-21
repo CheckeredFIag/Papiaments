@@ -121,6 +121,12 @@
     @media (max-width: 1100px) { .layout { grid-template-columns: minmax(180px, 220px) minmax(0,1fr); gap:var(--space-4); } .sidebar { top:var(--space-3); } }
     @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { position:static; max-height:none; } .mini-progress { grid-template-columns: 1fr; } }
     @media (max-width: 640px) { .app-shell { padding: var(--space-3); } .panel, .sidebar { padding: var(--space-4); } .topbar { align-items:flex-start; flex-direction:column; } .top-actions { width:100%; } .pill, .theme-toggle { flex:1 1 auto; } }
+    /* Niveau filter */
+    .niveau-filter { display:flex; flex-wrap:wrap; gap:var(--space-2); margin-bottom:var(--space-4); }
+    .niveau-btn { min-height:40px; padding:0 var(--space-4); border-radius:var(--radius-full); border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); font-weight:700; font-size:var(--text-sm); transition: background var(--transition-interactive), color var(--transition-interactive); }
+    .niveau-btn:hover { background:var(--color-primary-highlight); }
+    .niveau-btn.active { background:var(--color-primary); color:var(--color-text-inverse); border-color:var(--color-primary); }
+    .word-card.hidden-niveau { display:none; }
   </style>
 </head>
 <body>
@@ -145,8 +151,7 @@
         <section class="panel panel-section" id="read"><div><span class="eyebrow">Leeshoek</span><h2>Welk woord past bij het plaatje?</h2><p>Luister eerst, lees daarna hardop en kies het goede woord.</p></div><div class="activity-card"><div class="stat-row"><div><strong id="readPromptEmoji" style="font-size:2rem;">🐶</strong><p id="readPromptHint">Hint: dit dier blaft.</p></div><button class="btn btn-secondary" id="speakWordBtn">🔊 Luister</button></div><div class="choice-group" id="readChoices"></div><div class="feedback-strip" id="readFeedback">Kies een kaart om te beginnen.</div><div class="answer-row"><button class="btn btn-ghost hidden" id="nextReadBtn">Volgend woord</button></div></div></section>
         <section class="panel panel-section" id="write"><div><span class="eyebrow">Schrijfhoek</span><h2>Maak het woord af</h2><p>Kinderen oefenen letters, klanken en korte zinnen met woordbank en voorbeeldhulp.</p></div><div class="activity-grid"><div class="activity-card"><h3 id="writeWordTitle">Schrijf: cas</h3><p id="writeHint">Tip: dit is een huis.</p><div class="letter-bank" id="letterBank"></div><div class="writing-tools"><button class="btn btn-secondary" id="insertWordBtn">Zet voorbeeldwoord</button><button class="btn btn-ghost" id="clearTextBtn">Wis</button></div></div><div class="activity-card"><label for="writingArea"><strong>Mijn zin</strong></label><textarea id="writingArea" placeholder="Schrijf het woord of maak zelf een korte zin."></textarea><div class="writing-tools"><button class="btn btn-primary" id="checkWritingBtn">Controleer</button><button class="btn btn-secondary hidden" id="nextWriteBtn">Nieuw woord</button></div><div class="result-box" id="writingFeedback">Schrijf eerst zelf. Gebruik de voorbeeldknop alleen als hulp.</div></div></div></section>
         <section class="panel panel-section" id="speak"><div><span class="eyebrow">Praathoek</span><h2>Zeg het woord hardop</h2><p>De app vergelijkt het antwoord ruimer, zodat kleine accenten en browservarianten minder snel fout tellen.</p></div><div class="activity-grid"><div class="activity-card" style="text-align:center;"><div class="mic-orb" id="micOrb">🎤</div><h3 id="speakTarget">Zeg: bon dia</h3><p id="speakPrompt">Klik op de knop en spreek het woord of de zin na.</p><div class="speak-tools" style="justify-content:center;"><button class="btn btn-primary" id="micBtn" aria-pressed="false">Houd ingedrukt om te spreken</button><button class="btn btn-secondary" id="listenTargetBtn">🔊 Luister eerst</button><button class="btn btn-secondary hidden" id="nextSpeakBtn">Nieuw spreekwoord</button></div></div><div class="activity-card"><h3>Spreekfeedback</h3><div class="result-box" id="speechStatus">Nog niet gestart.</div><div class="result-box" id="speechResult">Je uitgesproken tekst komt hier.</div><div class="result-box" id="speechSupport">Browsercontrole wordt geladen...</div></div></div></section>
-        <section class="panel panel-section" id="words"><div><span class="eyebrow">Woordenschat</span><h2>Kleine woordkaartjes</h2><p>Druk op een kaartje om het woord voor te lezen. Zo kan een kind vrij ontdekken en herhalen.</p></div><div class="word-grid" id="wordGrid"></div></section>
-      </main>
+        <section class="panel panel-section" id="words"><div><span class="eyebrow">Woordenschat</span><h2>Kleine woordkaartjes</h2><p>Druk op een kaartje om het woord voor te lezen. Zo kan een kind vrij ontdekken en herhalen.</p></div><div class="niveau-filter" id="niveauFilter"></div><div class="word-grid" id="wordGrid"></div></section>      </main>
     </div>
     <p class="footer-note">Prototypeversie voor testgebruik. Voeg in GitHub Issues bugs, ideeën en verbeterpunten toe per onderdeel.</p>
   </div>
@@ -169,21 +174,73 @@
     function showSection(id){navButtons.forEach(btn=>btn.classList.toggle('active',btn.dataset.target===id));sections.forEach(sec=>sec.classList.toggle('active',sec.id===id));}
     navButtons.forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.target))); document.querySelectorAll('[data-jump]').forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.jump)));
     function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5);}
-    function renderReadExercise(){const ex=readExercises[readIndex%readExercises.length];document.getElementById('readPromptEmoji').textContent=ex.emoji;document.getElementById('readPromptHint').textContent=ex.hint;document.getElementById('readFeedback').textContent='Kies een kaart om te beginnen.';nextReadBtn.classList.add('hidden');const wrap=document.getElementById('readChoices');wrap.innerHTML='';shuffle(ex.options).forEach(option=>{const btn=document.createElement('button');btn.className='choice';btn.textContent=option;btn.addEventListener('click',()=>{const ok=option===ex.word;btn.classList.add(ok?'correct':'wrong');document.getElementById('readFeedback').textContent=ok?`Goed gedaan! ${ex.word} is goed. Nieuw woord komt eraan...`:`Bijna! Het goede woord is ${ex.word}. Kies nu zelf voor een nieuw woord.`;speakText(ex.word);if(ok&&!appState.completed.has('read-'+readIndex)){appState.completed.add('read-'+readIndex);addStar('read');}if(ok){setTimeout(()=>{readIndex+=1;renderReadExercise();},900);}else{nextReadBtn.classList.remove('hidden');}},{once:true});wrap.appendChild(btn);});}
-    function renderWriteExercise(){const ex=writeExercises[writeIndex%writeExercises.length];document.getElementById('writeWordTitle').textContent='Schrijf: '+ex.word;document.getElementById('writeHint').textContent=ex.hint;const bank=document.getElementById('letterBank');bank.innerHTML='';shuffle(ex.letters).forEach(letter=>{const chip=document.createElement('button');chip.className='chip';chip.textContent=letter;chip.addEventListener('click',()=>{const area=document.getElementById('writingArea');area.value+=letter;area.focus();});bank.appendChild(chip);});document.getElementById('writingArea').value='';document.getElementById('writingFeedback').textContent='Schrijf eerst zelf. Gebruik de voorbeeldknop alleen als hulp.';nextWriteBtn.classList.add('hidden');}
-    function renderSpeakExercise(){const ex=speakExercises[speakIndex%speakExercises.length];document.getElementById('speakTarget').textContent='Zeg: '+ex.target;document.getElementById('speechStatus').textContent='Klik op de knop en spreek rustig in.';document.getElementById('speechResult').textContent='Je uitgesproken tekst komt hier.';nextSpeakBtn.classList.add('hidden');}
-    function renderWordGrid(){const grid=document.getElementById('wordGrid');grid.innerHTML='';words.forEach(item=>{const card=document.createElement('button');card.className='word-card';card.innerHTML=`<span class="emoji">${item.emoji}</span><strong>${item.word}</strong><span>${item.meaning}</span>`;card.addEventListener('click',()=>speakText(item.word));grid.appendChild(card);});}
-    document.getElementById('speakWordBtn').addEventListener('click',()=>speakText(readExercises[readIndex%readExercises.length].word));
-    nextReadBtn.addEventListener('click',()=>{readIndex+=1;renderReadExercise();});
-    document.getElementById('insertWordBtn').addEventListener('click',()=>{document.getElementById('writingArea').value=writeExercises[writeIndex%writeExercises.length].sample;document.getElementById('writingFeedback').textContent='Voorbeeld geplaatst. Probeer nu zelf een variant te schrijven.';});
-    document.getElementById('clearTextBtn').addEventListener('click',()=>{document.getElementById('writingArea').value='';});
-    document.getElementById('checkWritingBtn').addEventListener('click',()=>{const ex=writeExercises[writeIndex%writeExercises.length];const text=normalizeSpeech(document.getElementById('writingArea').value);const ok=text.includes(normalizeSpeech(ex.word));document.getElementById('writingFeedback').textContent=ok?'Knap! Goed gedaan, nieuw woord komt eraan...':`Probeer ook het woord "${ex.word}" te gebruiken.`;if(ok&&!appState.completed.has('write-'+writeIndex)){appState.completed.add('write-'+writeIndex);addStar('write');}if(ok){setTimeout(()=>{writeIndex+=1;renderWriteExercise();},900);}else{nextWriteBtn.classList.remove('hidden');}});
-    nextWriteBtn.addEventListener('click',()=>{writeIndex+=1;renderWriteExercise();}); nextSpeakBtn.addEventListener('click',()=>{speakIndex+=1;renderSpeakExercise();}); document.getElementById('listenTargetBtn').addEventListener('click',()=>{const target=speakExercises[speakIndex%speakExercises.length].target;speakText(target);document.getElementById('speechStatus').textContent='Luister goed en zeg het daarna na.';});
+    function renderReadExercise(){const filtered = getFilteredExercises(readExercises);const ex=filtered[readIndex%readExercises.length];document.getElementById('readPromptEmoji').textContent=ex.emoji;document.getElementById('readPromptHint').textContent=ex.hint;document.getElementById('readFeedback').textContent='Kies een kaart om te beginnen.';nextReadBtn.classList.add('hidden');const wrap=document.getElementById('readChoices');wrap.innerHTML='';shuffle(ex.options).forEach(option=>{const btn=document.createElement('button');btn.className='choice';btn.textContent=option;btn.addEventListener('click',()=>{const ok=option===ex.word;btn.classList.add(ok?'correct':'wrong');document.getElementById('readFeedback').textContent=ok?`Goed gedaan! ${ex.word} is goed. Nieuw woord komt eraan...`:`Bijna! Het goede woord is ${ex.word}. Kies nu zelf voor een nieuw woord.`;speakText(ex.word);if(ok&&!appState.completed.has('read-'+readIndex)){appState.completed.add('read-'+readIndex);addStar('read');}if(ok){setTimeout(()=>{readIndex+=1;renderReadExercise();},900);}else{nextReadBtn.classList.remove('hidden');}},{once:true});wrap.appendChild(btn);});}
+    function renderWriteExercise(){const filtered = getFilteredExercises(writeExercises);const ex=filtered[writeIndex%writeExercises.length];document.getElementById('writeWordTitle').textContent='Schrijf: '+ex.word;document.getElementById('writeHint').textContent=ex.hint;const bank=document.getElementById('letterBank');bank.innerHTML='';shuffle(ex.letters).forEach(letter=>{const chip=document.createElement('button');chip.className='chip';chip.textContent=letter;chip.addEventListener('click',()=>{const area=document.getElementById('writingArea');area.value+=letter;area.focus();});bank.appendChild(chip);});document.getElementById('writingArea').value='';document.getElementById('writingFeedback').textContent='Schrijf eerst zelf. Gebruik de voorbeeldknop alleen als hulp.';nextWriteBtn.classList.add('hidden');}
+    function renderSpeakExercise(){const filtered = getFilteredExercises(speakExercises);const ex=filtered[speakIndex%speakExercises.length];document.getElementById('speakTarget').textContent='Zeg: '+ex.target;document.getElementById('speechStatus').textContent='Klik op de knop en spreek rustig in.';document.getElementById('speechResult').textContent='Je uitgesproken tekst komt hier.';nextSpeakBtn.classList.add('hidden');}
+    // ── Niveau filter ──────────────────────────────────────────
+    let activeNiveau = 'all';
+
+    function renderNiveauFilter() {
+      const niveaus = ['all', '4-6', '6-8', '8-10', '10'];
+      const labels  = { 'all':'🌟 Alles', '4-6':'4–6 jaar', '6-8':'6–8 jaar', '8-10':'8–10 jaar', '10':'10+ jaar' };
+      const wrap = document.getElementById('niveauFilter');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      niveaus.forEach(n => {
+        const btn = document.createElement('button');
+        btn.className = 'niveau-btn' + (n === activeNiveau ? ' active' : '');
+        btn.textContent = labels[n];
+        btn.addEventListener('click', () => {
+          activeNiveau = n;
+          renderNiveauFilter();
+          renderWordGrid();
+          filterExercisesByNiveau();
+        });
+        wrap.appendChild(btn);
+      });
+    }
+
+    function matchesNiveau(itemNiveau) {
+      if (activeNiveau === 'all') return true;
+      if (!itemNiveau) return true;
+      return itemNiveau === activeNiveau;
+    }
+
+    function filterExercisesByNiveau() {
+      // Filter leesoefeningen
+      readIndex = 0;
+      renderReadExercise();
+      // Filter schrijfoefeningen
+      writeIndex = 0;
+      renderWriteExercise();
+      // Filter spreekoefeningen
+      speakIndex = 0;
+      renderSpeakExercise();
+    }
+
+    function getFilteredExercises(list) {
+      const filtered = list.filter(e => matchesNiveau(e.niveau));
+      return filtered.length > 0 ? filtered : list; // fallback: toon alles als filter leeg is
+    }
+
+    function renderWordGrid() {
+      const grid = document.getElementById('wordGrid');
+      grid.innerHTML = '';
+      const filtered = words.filter(w => matchesNiveau(w.niveau));
+      const tonen = filtered.length > 0 ? filtered : words;
+      tonen.forEach(item => {
+        const card = document.createElement('button');
+        card.className = 'word-card';
+        card.innerHTML = `<span class="emoji">${item.emoji}</span><strong>${item.word}</strong><span>${item.meaning}</span>`;
+        card.addEventListener('click', () => speakText(item.word));
+        grid.appendChild(card);
+      });
+    }    
     function updateSpeechSupportMessage(){const supportBox=document.getElementById('speechSupport');const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;speechSupported=!!SpeechRecognition&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);supportBox.textContent=speechSupported?'Microfoon lijkt beschikbaar. Safari kan andere transcripties geven dan Chrome; de controle houdt daar nu ruimer rekening mee.':'Deze browser ondersteunt de microfoon-demo beperkt. Gebruik Chrome of Safari voor de test.';}
     function stopListening(){if(recognition&&isListening){try{recognition.stop();}catch(e){}}}
     async function startListening(){const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;const status=document.getElementById('speechStatus');const result=document.getElementById('speechResult');const orb=document.getElementById('micOrb');const btn=document.getElementById('micBtn');const target=speakExercises[speakIndex%speakExercises.length].target;if(!SpeechRecognition||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){status.textContent='Microfoon-opname lukt hier niet. Gebruik de luisterknop of open deze demo in Chrome of Safari.';speakText(target);return;}if(isListening)return;try{await navigator.mediaDevices.getUserMedia({audio:true});}catch(error){status.textContent='Ik krijg geen toestemming voor de microfoon. Controleer browserrechten en probeer opnieuw.';return;}recognition=new SpeechRecognition();recognition.lang='es-ES';recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=3;isListening=true;orb.classList.add('listening');btn.setAttribute('aria-pressed','true');btn.textContent='Laat los om te stoppen';status.textContent='Ik luister... spreek nu rustig in.';result.textContent='Nog niets gehoord.';recognition.onresult=(event)=>{const transcript=Array.from(event.results).map(r=>r[0].transcript).join(' ').trim();result.textContent=transcript?'Jij zei: '+transcript:'Nog niets gehoord.';if(event.results[event.results.length-1].isFinal){const normalizedTarget=normalizeSpeech(target);const normalizedHeard=normalizeSpeech(transcript);const ok=normalizedHeard.includes(normalizedTarget)||normalizedTarget.includes(normalizedHeard)||normalizedHeard.split(' ').some(part=>normalizedTarget.includes(part));status.textContent=ok?'Yes! Dat klonk goed. Nieuw spreekwoord komt eraan...':`Bijna! Ik hoorde iets anders. Probeer nog eens of kies een nieuw spreekwoord.`;if(ok&&!appState.completed.has('speak-'+speakIndex)){appState.completed.add('speak-'+speakIndex);addStar('speak');}if(ok){setTimeout(()=>{speakIndex+=1;renderSpeakExercise();},1100);}else{nextSpeakBtn.classList.remove('hidden');}}};recognition.onerror=(event)=>{const messages={'not-allowed':'De browser blokkeert de microfoon. Sta microfoontoegang toe en probeer opnieuw.','service-not-allowed':'Spraakservice is niet toegestaan in deze browserinstelling.','no-speech':'Ik hoorde geen stem. Houd de knop ingedrukt en spreek iets dichter bij de microfoon.','audio-capture':'Er is geen werkende microfoon gevonden.','network':'De spraakdienst kon niet verbinden. Probeer later opnieuw.'};status.textContent=messages[event.error]||'De microfoon stopte onverwacht. Probeer opnieuw.';nextSpeakBtn.classList.remove('hidden');};recognition.onend=()=>{isListening=false;orb.classList.remove('listening');btn.setAttribute('aria-pressed','false');btn.textContent='Houd ingedrukt om te spreken';};try{recognition.start();}catch(error){isListening=false;orb.classList.remove('listening');btn.setAttribute('aria-pressed','false');btn.textContent='Houd ingedrukt om te spreken';status.textContent='Starten van de microfoon lukte niet. Probeer opnieuw.';}}
     const micBtn=document.getElementById('micBtn'); ['mousedown','touchstart'].forEach(evt=>micBtn.addEventListener(evt,(e)=>{e.preventDefault();clearTimeout(pressTimer);pressTimer=setTimeout(()=>startListening(),20);},{passive:false})); ['mouseup','mouseleave','touchend','touchcancel'].forEach(evt=>micBtn.addEventListener(evt,(e)=>{e.preventDefault();clearTimeout(pressTimer);stopListening();},{passive:false})); micBtn.addEventListener('click',(e)=>e.preventDefault()); micBtn.addEventListener('keydown',(e)=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startListening();}}); micBtn.addEventListener('keyup',(e)=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();stopListening();}});
-    renderReadExercise(); renderWriteExercise(); renderSpeakExercise(); renderWordGrid(); updateSpeechSupportMessage(); updateProgress();
+    renderNiveauFilter();renderReadExercise(); renderWriteExercise(); renderSpeakExercise(); renderWordGrid(); updateSpeechSupportMessage(); updateProgress();
   </script>
 </body>
 </html>
