@@ -121,11 +121,10 @@
     @media (max-width: 1100px) { .layout { grid-template-columns: minmax(180px, 220px) minmax(0,1fr); gap:var(--space-4); } .sidebar { top:var(--space-3); } }
     @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { position:static; max-height:none; } .mini-progress { grid-template-columns: 1fr; } }
     @media (max-width: 640px) { .app-shell { padding: var(--space-3); } .panel, .sidebar { padding: var(--space-4); } .topbar { align-items:flex-start; flex-direction:column; } .top-actions { width:100%; } .pill, .theme-toggle { flex:1 1 auto; } }
-    /* Niveau filter */
-    .niveau-filter { display:flex; flex-wrap:wrap; gap:var(--space-2); }    .niveau-btn { min-height:40px; padding:0 var(--space-4); border-radius:var(--radius-full); border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); font-weight:700; font-size:var(--text-sm); transition: background var(--transition-interactive), color var(--transition-interactive); }
+    .niveau-filter { display:flex; flex-wrap:wrap; gap:var(--space-2); }
+    .niveau-btn { min-height:40px; padding:0 var(--space-4); border-radius:var(--radius-full); border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); font-weight:700; font-size:var(--text-sm); transition: background var(--transition-interactive), color var(--transition-interactive); }
     .niveau-btn:hover { background:var(--color-primary-highlight); }
     .niveau-btn.active { background:var(--color-primary); color:var(--color-text-inverse); border-color:var(--color-primary); }
-    .word-card.hidden-niveau { display:none; }
   </style>
 </head>
 <body>
@@ -136,7 +135,12 @@
         <div class="logo" aria-hidden="true"><svg viewBox="0 0 48 48" width="30" height="30" fill="none" aria-label="Logo Papiamento Leeravontuur"><path d="M11 29C11 18.5 18.5 11 29 11h7v7c0 10.5-7.5 18-18 18h-7v-7Z" fill="currentColor" opacity="0.95"/><path d="M14 31c7-1 11-5 12-12" stroke="white" stroke-width="3.2" stroke-linecap="round"/></svg></div>
         <div><div class="brand-title">Papiamento Leeravontuur</div><div class="brand-sub">Lezen, schrijven en spreken voor 6–8 jaar</div></div>
       </a>
-    <div class="top-actions"><div class="niveau-filter" id="niveauFilter"></div><div class="pill" id="welcome-pill">⭐ 0 sterren verdiend</div><button class="theme-toggle" data-theme-toggle aria-label="Zet donker thema aan">🌙 Thema</button></div>    </header>
+      <div class="top-actions">
+        <div class="niveau-filter" id="niveauFilter"></div>
+        <div class="pill" id="welcome-pill">⭐ 0 sterren verdiend</div>
+        <button class="theme-toggle" data-theme-toggle aria-label="Zet donker thema aan">🌙 Thema</button>
+      </div>
+    </header>
     <div class="layout">
       <aside class="sidebar" aria-label="Lesmenu">
         <div class="stats"><div class="progress-wrap"><div class="stat-row"><strong>Mijn reis</strong><span id="progressText">0%</span></div><div class="meter" aria-hidden="true"><span id="progressBar"></span></div></div><div class="mini-progress"><div class="mini-card"><strong id="readScore">0</strong><span>Lezen</span></div><div class="mini-card"><strong id="writeScore">0</strong><span>Schrijven</span></div><div class="mini-card"><strong id="speakScore">0</strong><span>Spreken</span></div></div></div>
@@ -149,39 +153,82 @@
         <section class="panel panel-section" id="read"><div><span class="eyebrow">Leeshoek</span><h2>Welk woord past bij het plaatje?</h2><p>Luister eerst, lees daarna hardop en kies het goede woord.</p></div><div class="activity-card"><div class="stat-row"><div><strong id="readPromptEmoji" style="font-size:2rem;">🐶</strong><p id="readPromptHint">Hint: dit dier blaft.</p></div><button class="btn btn-secondary" id="speakWordBtn">🔊 Luister</button></div><div class="choice-group" id="readChoices"></div><div class="feedback-strip" id="readFeedback">Kies een kaart om te beginnen.</div><div class="answer-row"><button class="btn btn-ghost hidden" id="nextReadBtn">Volgend woord</button></div></div></section>
         <section class="panel panel-section" id="write"><div><span class="eyebrow">Schrijfhoek</span><h2>Maak het woord af</h2><p>Kinderen oefenen letters, klanken en korte zinnen met woordbank en voorbeeldhulp.</p></div><div class="activity-grid"><div class="activity-card"><h3 id="writeWordTitle">Schrijf: cas</h3><p id="writeHint">Tip: dit is een huis.</p><div class="letter-bank" id="letterBank"></div><div class="writing-tools"><button class="btn btn-secondary" id="insertWordBtn">Zet voorbeeldwoord</button><button class="btn btn-ghost" id="clearTextBtn">Wis</button></div></div><div class="activity-card"><label for="writingArea"><strong>Mijn zin</strong></label><textarea id="writingArea" placeholder="Schrijf het woord of maak zelf een korte zin."></textarea><div class="writing-tools"><button class="btn btn-primary" id="checkWritingBtn">Controleer</button><button class="btn btn-secondary hidden" id="nextWriteBtn">Nieuw woord</button></div><div class="result-box" id="writingFeedback">Schrijf eerst zelf. Gebruik de voorbeeldknop alleen als hulp.</div></div></div></section>
         <section class="panel panel-section" id="speak"><div><span class="eyebrow">Praathoek</span><h2>Zeg het woord hardop</h2><p>De app vergelijkt het antwoord ruimer, zodat kleine accenten en browservarianten minder snel fout tellen.</p></div><div class="activity-grid"><div class="activity-card" style="text-align:center;"><div class="mic-orb" id="micOrb">🎤</div><h3 id="speakTarget">Zeg: bon dia</h3><p id="speakPrompt">Klik op de knop en spreek het woord of de zin na.</p><div class="speak-tools" style="justify-content:center;"><button class="btn btn-primary" id="micBtn" aria-pressed="false">Houd ingedrukt om te spreken</button><button class="btn btn-secondary" id="listenTargetBtn">🔊 Luister eerst</button><button class="btn btn-secondary hidden" id="nextSpeakBtn">Nieuw spreekwoord</button></div></div><div class="activity-card"><h3>Spreekfeedback</h3><div class="result-box" id="speechStatus">Nog niet gestart.</div><div class="result-box" id="speechResult">Je uitgesproken tekst komt hier.</div><div class="result-box" id="speechSupport">Browsercontrole wordt geladen...</div></div></div></section>
-        <section class="panel panel-section" id="words"><div><span class="eyebrow">Woordenschat</span><h2>Kleine woordkaartjes</h2><p>Druk op een kaartje om het woord voor te lezen. Zo kan een kind vrij ontdekken en herhalen.</p></div><div class="word-grid" id="wordGrid"></div></section>    </div>
+        <section class="panel panel-section" id="words"><div><span class="eyebrow">Woordenschat</span><h2>Kleine woordkaartjes</h2><p>Druk op een kaartje om het woord voor te lezen. Zo kan een kind vrij ontdekken en herhalen.</p></div><div class="word-grid" id="wordGrid"></div></section>
+      </main>
+    </div>
     <p class="footer-note">Prototypeversie voor testgebruik. Voeg in GitHub Issues bugs, ideeën en verbeterpunten toe per onderdeel.</p>
   </div>
+
+  <!-- ✅ Data uit CSV — gegenereerd door update_index.py -->
+  <script src="data.js"></script>
+
   <script>
+    // ── Controleer of data.js geladen is ───────────────────────────
+    if (typeof words === 'undefined' || typeof readExercises === 'undefined') {
+      document.body.insertAdjacentHTML('afterbegin',
+        '<div style="background:#c55a4b;color:#fff;padding:1rem 1.5rem;font-weight:700;text-align:center;">' +
+        '⚠️ data.js kon niet worden geladen. Draai eerst: <code>python update_index.py</code>' +
+        '</div>');
+    }
+
     const appState = { stars: 0, read: 0, write: 0, speak: 0, completed: new Set(), theme: 'light' };
-    const readExercises = [{word:'kachó',emoji:'🐶',hint:'Hint: dit dier blaft.',options:['piska','kachó','cas']},{word:'awa',emoji:'💧',hint:'Hint: dit drink je.',options:['solo','lama','awa']},{word:'solo',emoji:'☀️',hint:'Hint: deze schijnt in de lucht.',options:['luna','solo','barika']},{word:'cas',emoji:'🏠',hint:'Hint: hier woon je.',options:['cas','mesa','scol']},{word:'pushi',emoji:'🐱',hint:'Hint: dit dier mauwt.',options:['pushi','solo','awa']},{word:'korona',emoji:'👑',hint:'Hint: dit is een kroon.',options:['korona','cas','scol']},{word:'laman',emoji:'🌊',hint:'Hint: hier zwemmen de vissen in.',options:['laman','solo','cas']}];
-    const writeExercises = [{word:'cas',hint:'Tip: dit is een huis.',letters:['c','a','s','l','o','m'],sample:'Mi ta mira un cas.'},{word:'awa',hint:'Tip: dit drink je.',letters:['a','w','a','i','u','p'],sample:'Mi ke bebe awa.'},{word:'solo',hint:'Tip: deze schijnt overdag.',letters:['s','o','l','o','n','r'],sample:'E solo ta grandi.'},{word:'bon dia',hint:'Tip: zo groet je in de ochtend.',letters:['b','o','n','d','i','a'],sample:'Bon dia, mama!'},{word:'mama',hint:'Tip: dit is je moeder.',letters:['m','a','m','a','p','l'],sample:'Mi mama ta bon.'},{word:'papa',hint:'Tip: dit is je vader.',letters:['p','a','p','a','s','e'],sample:'Mi papa ta traha.'},{word:'laman',hint:'Tip: dit is de zee.',letters:['l','a','m','a','n','p'],sample:'E laman ta blou.'}];
-    const speakExercises = [{target:'bon dia'},{target:'mi ta yama Ana'},{target:'awa'},{target:'danki'},{target:'mi ta klas'},{target:'kico ta ora?'},{target:'bon nochi'},{target:'mi ta bai school'}];
-    const words = [{word:'awa',emoji:'💧',meaning:'water'},{word:'cas',emoji:'🏠',meaning:'huis'},{word:'solo',emoji:'☀️',meaning:'zon'},{word:'piska',emoji:'🐟',meaning:'vis'},{word:'danki',emoji:'🙏',meaning:'dank je'},{word:'bon dia',emoji:'🌞',meaning:'goedemorgen'},{word:'scol',emoji:'🎒',meaning:'school'},{word:'pushi',emoji:'🐱',meaning:'kat'},{word:'laman',emoji:'🌊',meaning:'zee'},{word:'palo',emoji:'🌳',meaning:'boom'}];
-    let readIndex = 0, writeIndex = 0, speakIndex = 0, recognition = null, isListening = false, speechSupported = false, pressTimer = null;
-    const navButtons = [...document.querySelectorAll('.nav-btn')], sections = [...document.querySelectorAll('.panel-section')], progressBar = document.getElementById('progressBar'), progressText = document.getElementById('progressText'), welcomePill = document.getElementById('welcome-pill'), readScore = document.getElementById('readScore'), writeScore = document.getElementById('writeScore'), speakScore = document.getElementById('speakScore'), nextSectionBtn = document.getElementById('nextSectionBtn'), nextStepText = document.getElementById('nextStepText'), nextReadBtn = document.getElementById('nextReadBtn'), nextWriteBtn = document.getElementById('nextWriteBtn'), nextSpeakBtn = document.getElementById('nextSpeakBtn');
-    function setTheme(theme){document.documentElement.setAttribute('data-theme', theme);appState.theme = theme;const toggle=document.querySelector('[data-theme-toggle]');toggle.textContent = theme==='dark'?'☀️ Thema':'🌙 Thema';toggle.setAttribute('aria-label', theme==='dark'?'Zet licht thema aan':'Zet donker thema aan');}
-    document.querySelector('[data-theme-toggle]').addEventListener('click',()=>setTheme(appState.theme==='dark'?'light':'dark')); if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)setTheme('dark');
-    function speakText(text){if('speechSynthesis' in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='es-ES';u.rate=0.88;u.pitch=1.05;window.speechSynthesis.speak(u);}}
-    function normalizeSpeech(text){return (text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[.,!?;:]/g,' ').replace(/ll/g,'y').replace(/buen dia/g,'bon dia').replace(/buenos dias/g,'bon dia').replace(/mita/g,'mi ta').replace(/llama/g,'yama').replace(/a ana/g,'ana').replace(/\s+/g,' ').trim();}
-    function currentStage(){if(appState.read<readExercises.length)return'read';if(appState.write<writeExercises.length)return'write';if(appState.speak<speakExercises.length)return'speak';return'words';}
-    function updateNextStep(){const stage=currentStage();const labels={read:'Ga naar lezen',write:'Ga naar schrijven',speak:'Ga naar spreken',words:'Vrij spelen met woorden'};const texts={read:'Verzamel alle leeswoorden om door te gaan naar schrijven.',write:'Mooi! Nu alle schrijfoefeningen voor de volgende stap.',speak:'Nog even spreken oefenen. Daarna ben je klaar voor vrij spelen.',words:'Alle basisonderdelen zijn afgerond. Je kunt nu vrij oefenen met woorden.'};nextSectionBtn.textContent=labels[stage];nextStepText.textContent=texts[stage];nextSectionBtn.onclick=()=>showSection(stage);}
-    function updateProgress(){const total=appState.read+appState.write+appState.speak;const max=readExercises.length+writeExercises.length+speakExercises.length;const pct=Math.min(100,Math.round((total/max)*100));progressBar.style.width=pct+'%';progressText.textContent=pct+'%';welcomePill.textContent=`⭐ ${appState.stars} sterren verdiend`;readScore.textContent=appState.read;writeScore.textContent=appState.write;speakScore.textContent=appState.speak;updateNextStep();}
-    function addStar(skill){appState.stars+=1;appState[skill]+=1;updateProgress();}
-    function showSection(id){navButtons.forEach(btn=>btn.classList.toggle('active',btn.dataset.target===id));sections.forEach(sec=>sec.classList.toggle('active',sec.id===id));}
-    navButtons.forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.target))); document.querySelectorAll('[data-jump]').forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.jump)));
-    function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5);}
-    function renderReadExercise(){const filtered = getFilteredExercises(readExercises);const ex=filtered[readIndex%readExercises.length];document.getElementById('readPromptEmoji').textContent=ex.emoji;document.getElementById('readPromptHint').textContent=ex.hint;document.getElementById('readFeedback').textContent='Kies een kaart om te beginnen.';nextReadBtn.classList.add('hidden');const wrap=document.getElementById('readChoices');wrap.innerHTML='';shuffle(ex.options).forEach(option=>{const btn=document.createElement('button');btn.className='choice';btn.textContent=option;btn.addEventListener('click',()=>{const ok=option===ex.word;btn.classList.add(ok?'correct':'wrong');document.getElementById('readFeedback').textContent=ok?`Goed gedaan! ${ex.word} is goed. Nieuw woord komt eraan...`:`Bijna! Het goede woord is ${ex.word}. Kies nu zelf voor een nieuw woord.`;speakText(ex.word);if(ok&&!appState.completed.has('read-'+readIndex)){appState.completed.add('read-'+readIndex);addStar('read');}if(ok){setTimeout(()=>{readIndex+=1;renderReadExercise();},900);}else{nextReadBtn.classList.remove('hidden');}},{once:true});wrap.appendChild(btn);});}
-    function renderWriteExercise(){const filtered = getFilteredExercises(writeExercises);const ex=filtered[writeIndex%writeExercises.length];document.getElementById('writeWordTitle').textContent='Schrijf: '+ex.word;document.getElementById('writeHint').textContent=ex.hint;const bank=document.getElementById('letterBank');bank.innerHTML='';shuffle(ex.letters).forEach(letter=>{const chip=document.createElement('button');chip.className='chip';chip.textContent=letter;chip.addEventListener('click',()=>{const area=document.getElementById('writingArea');area.value+=letter;area.focus();});bank.appendChild(chip);});document.getElementById('writingArea').value='';document.getElementById('writingFeedback').textContent='Schrijf eerst zelf. Gebruik de voorbeeldknop alleen als hulp.';nextWriteBtn.classList.add('hidden');}
-    function renderSpeakExercise(){const filtered = getFilteredExercises(speakExercises);const ex=filtered[speakIndex%speakExercises.length];document.getElementById('speakTarget').textContent='Zeg: '+ex.target;document.getElementById('speechStatus').textContent='Klik op de knop en spreek rustig in.';document.getElementById('speechResult').textContent='Je uitgesproken tekst komt hier.';nextSpeakBtn.classList.add('hidden');}
-    // ── Niveau filter ──────────────────────────────────────────
+    let readIndex = 0, writeIndex = 0, speakIndex = 0;
+    let recognition = null, isListening = false, speechSupported = false, pressTimer = null;
+
+    const navButtons   = [...document.querySelectorAll('.nav-btn')];
+    const sections     = [...document.querySelectorAll('.panel-section')];
+    const progressBar  = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const welcomePill  = document.getElementById('welcome-pill');
+    const readScore    = document.getElementById('readScore');
+    const writeScore   = document.getElementById('writeScore');
+    const speakScore   = document.getElementById('speakScore');
+    const nextSectionBtn = document.getElementById('nextSectionBtn');
+    const nextStepText   = document.getElementById('nextStepText');
+    const nextReadBtn    = document.getElementById('nextReadBtn');
+    const nextWriteBtn   = document.getElementById('nextWriteBtn');
+    const nextSpeakBtn   = document.getElementById('nextSpeakBtn');
+
+    // ── Thema ──────────────────────────────────────────────────────
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      appState.theme = theme;
+      const toggle = document.querySelector('[data-theme-toggle]');
+      toggle.textContent = theme === 'dark' ? '☀️ Thema' : '🌙 Thema';
+      toggle.setAttribute('aria-label', theme === 'dark' ? 'Zet licht thema aan' : 'Zet donker thema aan');
+    }
+    document.querySelector('[data-theme-toggle]').addEventListener('click', () =>
+      setTheme(appState.theme === 'dark' ? 'light' : 'dark'));
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+
+    // ── TTS ────────────────────────────────────────────────────────
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'es-ES'; u.rate = 0.88; u.pitch = 1.05;
+        window.speechSynthesis.speak(u);
+      }
+    }
+
+    // ── Speech normalisatie ────────────────────────────────────────
+    function normalizeSpeech(text) {
+      return (text || '').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[.,!?;:]/g, ' ')
+        .replace(/ll/g, 'y').replace(/buen dia/g, 'bon dia')
+        .replace(/buenos dias/g, 'bon dia').replace(/mita/g, 'mi ta')
+        .replace(/llama/g, 'yama').replace(/a ana/g, 'ana')
+        .replace(/\s+/g, ' ').trim();
+    }
+
+    // ── Niveau filter ──────────────────────────────────────────────
     let activeNiveau = 'all';
 
     function renderNiveauFilter() {
       const niveaus = ['all', '4-6', '6-8', '8-10', '10'];
-      const labels  = { 'all':'🌟 Alles', '4-6':'4–6 jaar', '6-8':'6–8 jaar', '8-10':'8–10 jaar', '10':'10+ jaar' };
+      const labels  = { 'all': '🌟 Alles', '4-6': '4–6 jaar', '6-8': '6–8 jaar', '8-10': '8–10 jaar', '10': '10+ jaar' };
       const wrap = document.getElementById('niveauFilter');
-      if (!wrap) return;
       wrap.innerHTML = '';
       niveaus.forEach(n => {
         const btn = document.createElement('button');
@@ -190,54 +237,272 @@
         btn.addEventListener('click', () => {
           activeNiveau = n;
           renderNiveauFilter();
+          readIndex = 0; writeIndex = 0; speakIndex = 0;
+          renderReadExercise();
+          renderWriteExercise();
+          renderSpeakExercise();
           renderWordGrid();
-          filterExercisesByNiveau();
         });
         wrap.appendChild(btn);
       });
     }
 
-    function matchesNiveau(itemNiveau) {
-      if (activeNiveau === 'all') return true;
-      if (!itemNiveau) return true;
-      return itemNiveau === activeNiveau;
+    function getFiltered(list) {
+      const f = list.filter(e => activeNiveau === 'all' || !e.niveau || e.niveau === activeNiveau || e.niveau === 'all');
+      return f.length > 0 ? f : list;
     }
 
-    function filterExercisesByNiveau() {
-      // Filter leesoefeningen
-      readIndex = 0;
-      renderReadExercise();
-      // Filter schrijfoefeningen
-      writeIndex = 0;
-      renderWriteExercise();
-      // Filter spreekoefeningen
-      speakIndex = 0;
-      renderSpeakExercise();
+    // ── Voortgang ──────────────────────────────────────────────────
+    function currentStage() {
+      if (appState.read  < getFiltered(readExercises).length)  return 'read';
+      if (appState.write < getFiltered(writeExercises).length) return 'write';
+      if (appState.speak < getFiltered(speakExercises).length) return 'speak';
+      return 'words';
     }
 
-    function getFilteredExercises(list) {
-      const filtered = list.filter(e => matchesNiveau(e.niveau));
-      return filtered.length > 0 ? filtered : list; // fallback: toon alles als filter leeg is
+    function updateNextStep() {
+      const stage  = currentStage();
+      const labels = { read: 'Ga naar lezen', write: 'Ga naar schrijven', speak: 'Ga naar spreken', words: 'Vrij spelen met woorden' };
+      const texts  = { read: 'Verzamel alle leeswoorden om door te gaan naar schrijven.', write: 'Mooi! Nu alle schrijfoefeningen voor de volgende stap.', speak: 'Nog even spreken oefenen. Daarna ben je klaar voor vrij spelen.', words: 'Alle basisonderdelen zijn afgerond. Je kunt nu vrij oefenen met woorden.' };
+      nextSectionBtn.textContent = labels[stage];
+      nextStepText.textContent   = texts[stage];
+      nextSectionBtn.onclick = () => showSection(stage);
     }
 
+    function updateProgress() {
+      const total = appState.read + appState.write + appState.speak;
+      const max   = getFiltered(readExercises).length + getFiltered(writeExercises).length + getFiltered(speakExercises).length;
+      const pct   = max > 0 ? Math.min(100, Math.round((total / max) * 100)) : 0;
+      progressBar.style.width  = pct + '%';
+      progressText.textContent = pct + '%';
+      welcomePill.textContent  = `⭐ ${appState.stars} sterren verdiend`;
+      readScore.textContent    = appState.read;
+      writeScore.textContent   = appState.write;
+      speakScore.textContent   = appState.speak;
+      updateNextStep();
+    }
+
+    function addStar(skill) { appState.stars += 1; appState[skill] += 1; updateProgress(); }
+
+    // ── Navigatie ──────────────────────────────────────────────────
+    function showSection(id) {
+      navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.target === id));
+      sections.forEach(sec   => sec.classList.toggle('active', sec.id === id));
+    }
+    navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.target)));
+    document.querySelectorAll('[data-jump]').forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.jump)));
+
+    function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+    // ── Leesoefeningen ─────────────────────────────────────────────
+    function renderReadExercise() {
+      const list = getFiltered(readExercises);
+      const ex   = list[readIndex % list.length];
+      document.getElementById('readPromptEmoji').textContent = ex.emoji;
+      document.getElementById('readPromptHint').textContent  = ex.hint;
+      document.getElementById('readFeedback').textContent    = 'Kies een kaart om te beginnen.';
+      nextReadBtn.classList.add('hidden');
+
+      const wrap = document.getElementById('readChoices');
+      wrap.innerHTML = '';
+      shuffle(ex.options).forEach(option => {
+        const btn = document.createElement('button');
+        btn.className   = 'choice';
+        btn.textContent = option;
+        btn.addEventListener('click', () => {
+          const ok = option === ex.word;
+          btn.classList.add(ok ? 'correct' : 'wrong');
+          document.getElementById('readFeedback').textContent = ok
+            ? `Goed gedaan! ${ex.word} is goed. Nieuw woord komt eraan...`
+            : `Bijna! Het goede woord is ${ex.word}. Kies nu zelf voor een nieuw woord.`;
+          speakText(ex.word);
+          if (ok && !appState.completed.has('read-' + readIndex)) {
+            appState.completed.add('read-' + readIndex);
+            addStar('read');
+          }
+          if (ok) { setTimeout(() => { readIndex += 1; renderReadExercise(); }, 900); }
+          else     { nextReadBtn.classList.remove('hidden'); }
+        }, { once: true });
+        wrap.appendChild(btn);
+      });
+    }
+
+    // ── Schrijfoefeningen ──────────────────────────────────────────
+    function renderWriteExercise() {
+      const list = getFiltered(writeExercises);
+      const ex   = list[writeIndex % list.length];
+      document.getElementById('writeWordTitle').textContent = 'Schrijf: ' + ex.word;
+      document.getElementById('writeHint').textContent      = ex.hint;
+
+      const bank = document.getElementById('letterBank');
+      bank.innerHTML = '';
+      shuffle(ex.letters).forEach(letter => {
+        const chip = document.createElement('button');
+        chip.className   = 'chip';
+        chip.textContent = letter;
+        chip.addEventListener('click', () => {
+          const area = document.getElementById('writingArea');
+          area.value += letter;
+          area.focus();
+        });
+        bank.appendChild(chip);
+      });
+      document.getElementById('writingArea').value          = '';
+      document.getElementById('writingFeedback').textContent = 'Schrijf eerst zelf. Gebruik de voorbeeldknop alleen als hulp.';
+      nextWriteBtn.classList.add('hidden');
+    }
+
+    // ── Spreekoefeningen ───────────────────────────────────────────
+    function renderSpeakExercise() {
+      const list = getFiltered(speakExercises);
+      const ex   = list[speakIndex % list.length];
+      document.getElementById('speakTarget').textContent   = 'Zeg: ' + ex.target;
+      document.getElementById('speechStatus').textContent  = 'Klik op de knop en spreek rustig in.';
+      document.getElementById('speechResult').textContent  = 'Je uitgesproken tekst komt hier.';
+      nextSpeakBtn.classList.add('hidden');
+    }
+
+    // ── Woordgrid ──────────────────────────────────────────────────
     function renderWordGrid() {
-      const grid = document.getElementById('wordGrid');
+      const grid   = document.getElementById('wordGrid');
       grid.innerHTML = '';
-      const filtered = words.filter(w => matchesNiveau(w.niveau));
-      const tonen = filtered.length > 0 ? filtered : words;
-      tonen.forEach(item => {
+      getFiltered(words).forEach(item => {
         const card = document.createElement('button');
         card.className = 'word-card';
         card.innerHTML = `<span class="emoji">${item.emoji}</span><strong>${item.word}</strong><span>${item.meaning}</span>`;
         card.addEventListener('click', () => speakText(item.word));
         grid.appendChild(card);
       });
-    }    
-    function updateSpeechSupportMessage(){const supportBox=document.getElementById('speechSupport');const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;speechSupported=!!SpeechRecognition&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);supportBox.textContent=speechSupported?'Microfoon lijkt beschikbaar. Safari kan andere transcripties geven dan Chrome; de controle houdt daar nu ruimer rekening mee.':'Deze browser ondersteunt de microfoon-demo beperkt. Gebruik Chrome of Safari voor de test.';}
-    function stopListening(){if(recognition&&isListening){try{recognition.stop();}catch(e){}}}
-    async function startListening(){const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;const status=document.getElementById('speechStatus');const result=document.getElementById('speechResult');const orb=document.getElementById('micOrb');const btn=document.getElementById('micBtn');const target=speakExercises[speakIndex%speakExercises.length].target;if(!SpeechRecognition||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){status.textContent='Microfoon-opname lukt hier niet. Gebruik de luisterknop of open deze demo in Chrome of Safari.';speakText(target);return;}if(isListening)return;try{await navigator.mediaDevices.getUserMedia({audio:true});}catch(error){status.textContent='Ik krijg geen toestemming voor de microfoon. Controleer browserrechten en probeer opnieuw.';return;}recognition=new SpeechRecognition();recognition.lang='es-ES';recognition.continuous=false;recognition.interimResults=true;recognition.maxAlternatives=3;isListening=true;orb.classList.add('listening');btn.setAttribute('aria-pressed','true');btn.textContent='Laat los om te stoppen';status.textContent='Ik luister... spreek nu rustig in.';result.textContent='Nog niets gehoord.';recognition.onresult=(event)=>{const transcript=Array.from(event.results).map(r=>r[0].transcript).join(' ').trim();result.textContent=transcript?'Jij zei: '+transcript:'Nog niets gehoord.';if(event.results[event.results.length-1].isFinal){const normalizedTarget=normalizeSpeech(target);const normalizedHeard=normalizeSpeech(transcript);const ok=normalizedHeard.includes(normalizedTarget)||normalizedTarget.includes(normalizedHeard)||normalizedHeard.split(' ').some(part=>normalizedTarget.includes(part));status.textContent=ok?'Yes! Dat klonk goed. Nieuw spreekwoord komt eraan...':`Bijna! Ik hoorde iets anders. Probeer nog eens of kies een nieuw spreekwoord.`;if(ok&&!appState.completed.has('speak-'+speakIndex)){appState.completed.add('speak-'+speakIndex);addStar('speak');}if(ok){setTimeout(()=>{speakIndex+=1;renderSpeakExercise();},1100);}else{nextSpeakBtn.classList.remove('hidden');}}};recognition.onerror=(event)=>{const messages={'not-allowed':'De browser blokkeert de microfoon. Sta microfoontoegang toe en probeer opnieuw.','service-not-allowed':'Spraakservice is niet toegestaan in deze browserinstelling.','no-speech':'Ik hoorde geen stem. Houd de knop ingedrukt en spreek iets dichter bij de microfoon.','audio-capture':'Er is geen werkende microfoon gevonden.','network':'De spraakdienst kon niet verbinden. Probeer later opnieuw.'};status.textContent=messages[event.error]||'De microfoon stopte onverwacht. Probeer opnieuw.';nextSpeakBtn.classList.remove('hidden');};recognition.onend=()=>{isListening=false;orb.classList.remove('listening');btn.setAttribute('aria-pressed','false');btn.textContent='Houd ingedrukt om te spreken';};try{recognition.start();}catch(error){isListening=false;orb.classList.remove('listening');btn.setAttribute('aria-pressed','false');btn.textContent='Houd ingedrukt om te spreken';status.textContent='Starten van de microfoon lukte niet. Probeer opnieuw.';}}
-    const micBtn=document.getElementById('micBtn'); ['mousedown','touchstart'].forEach(evt=>micBtn.addEventListener(evt,(e)=>{e.preventDefault();clearTimeout(pressTimer);pressTimer=setTimeout(()=>startListening(),20);},{passive:false})); ['mouseup','mouseleave','touchend','touchcancel'].forEach(evt=>micBtn.addEventListener(evt,(e)=>{e.preventDefault();clearTimeout(pressTimer);stopListening();},{passive:false})); micBtn.addEventListener('click',(e)=>e.preventDefault()); micBtn.addEventListener('keydown',(e)=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();startListening();}}); micBtn.addEventListener('keyup',(e)=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();stopListening();}});
-    renderNiveauFilter();renderReadExercise(); renderWriteExercise(); renderSpeakExercise(); renderWordGrid(); updateSpeechSupportMessage(); updateProgress();
+    }
+
+    // ── Schrijf-knoppen ────────────────────────────────────────────
+    document.getElementById('insertWordBtn').addEventListener('click', () => {
+      const list = getFiltered(writeExercises);
+      const ex   = list[writeIndex % list.length];
+      document.getElementById('writingArea').value = ex.sample;
+    });
+    document.getElementById('clearTextBtn').addEventListener('click', () => {
+      document.getElementById('writingArea').value = '';
+    });
+    document.getElementById('checkWritingBtn').addEventListener('click', () => {
+      const list     = getFiltered(writeExercises);
+      const ex       = list[writeIndex % list.length];
+      const typed    = document.getElementById('writingArea').value.trim().toLowerCase();
+      const ok       = typed.includes(ex.word.toLowerCase());
+      const feedback = document.getElementById('writingFeedback');
+      feedback.textContent = ok
+        ? `Super! Je hebt "${ex.word}" goed geschreven.`
+        : `Probeer het woord "${ex.word}" in je zin te gebruiken.`;
+      if (ok && !appState.completed.has('write-' + writeIndex)) {
+        appState.completed.add('write-' + writeIndex);
+        addStar('write');
+      }
+      nextWriteBtn.classList.remove('hidden');
+    });
+    nextReadBtn.addEventListener('click',  () => { readIndex  += 1; renderReadExercise(); });
+    nextWriteBtn.addEventListener('click', () => { writeIndex += 1; renderWriteExercise(); });
+    nextSpeakBtn.addEventListener('click', () => { speakIndex += 1; renderSpeakExercise(); });
+
+    document.getElementById('speakWordBtn').addEventListener('click', () => {
+      const list = getFiltered(readExercises);
+      speakText(list[readIndex % list.length].word);
+    });
+    document.getElementById('listenTargetBtn').addEventListener('click', () => {
+      const list = getFiltered(speakExercises);
+      speakText(list[speakIndex % list.length].target);
+    });
+
+    // ── Microfoon ──────────────────────────────────────────────────
+    function updateSpeechSupportMessage() {
+      const supportBox = document.getElementById('speechSupport');
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechSupported = !!SR && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      supportBox.textContent = speechSupported
+        ? 'Microfoon lijkt beschikbaar. Safari kan andere transcripties geven dan Chrome; de controle houdt daar nu ruimer rekening mee.'
+        : 'Deze browser ondersteunt de microfoon-demo beperkt. Gebruik Chrome of Safari voor de test.';
+    }
+
+    function stopListening() { if (recognition && isListening) { try { recognition.stop(); } catch (e) {} } }
+
+    async function startListening() {
+      const SR     = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const status = document.getElementById('speechStatus');
+      const result = document.getElementById('speechResult');
+      const orb    = document.getElementById('micOrb');
+      const btn    = document.getElementById('micBtn');
+      const list   = getFiltered(speakExercises);
+      const target = list[speakIndex % list.length].target;
+
+      if (!SR || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+        status.textContent = 'Microfoon-opname lukt hier niet. Gebruik de luisterknop of open deze demo in Chrome of Safari.';
+        speakText(target); return;
+      }
+      if (isListening) return;
+      try { await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch (error) { status.textContent = 'Ik krijg geen toestemming voor de microfoon. Controleer browserrechten en probeer opnieuw.'; return; }
+
+      recognition = new SR();
+      recognition.lang = 'es-ES'; recognition.continuous = false;
+      recognition.interimResults = true; recognition.maxAlternatives = 3;
+      isListening = true;
+      orb.classList.add('listening');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.textContent = 'Laat los om te stoppen';
+      status.textContent = 'Ik luister... spreek nu rustig in.';
+      result.textContent = 'Nog niets gehoord.';
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results).map(r => r[0].transcript).join(' ').trim();
+        result.textContent = transcript ? 'Jij zei: ' + transcript : 'Nog niets gehoord.';
+        if (event.results[event.results.length - 1].isFinal) {
+          const nt = normalizeSpeech(target), nh = normalizeSpeech(transcript);
+          const ok = nh.includes(nt) || nt.includes(nh) || nh.split(' ').some(p => nt.includes(p));
+          status.textContent = ok
+            ? 'Yes! Dat klonk goed. Nieuw spreekwoord komt eraan...'
+            : 'Bijna! Ik hoorde iets anders. Probeer nog eens of kies een nieuw spreekwoord.';
+          if (ok && !appState.completed.has('speak-' + speakIndex)) {
+            appState.completed.add('speak-' + speakIndex);
+            addStar('speak');
+          }
+          if (ok) { setTimeout(() => { speakIndex += 1; renderSpeakExercise(); }, 1100); }
+          else    { nextSpeakBtn.classList.remove('hidden'); }
+        }
+      };
+      recognition.onerror = (event) => {
+        const msgs = { 'not-allowed': 'De browser blokkeert de microfoon. Sta microfoontoegang toe en probeer opnieuw.', 'no-speech': 'Ik hoorde geen stem. Houd de knop ingedrukt en spreek iets dichter bij de microfoon.', 'audio-capture': 'Er is geen werkende microfoon gevonden.', 'network': 'De spraakdienst kon niet verbinden. Probeer later opnieuw.' };
+        status.textContent = msgs[event.error] || 'De microfoon stopte onverwacht. Probeer opnieuw.';
+        nextSpeakBtn.classList.remove('hidden');
+      };
+      recognition.onend = () => {
+        isListening = false;
+        orb.classList.remove('listening');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = 'Houd ingedrukt om te spreken';
+      };
+      try { recognition.start(); }
+      catch (error) {
+        isListening = false; orb.classList.remove('listening');
+        btn.setAttribute('aria-pressed', 'false');
+        btn.textContent = 'Houd ingedrukt om te spreken';
+        status.textContent = 'Starten van de microfoon lukte niet. Probeer opnieuw.';
+      }
+    }
+
+    const micBtn = document.getElementById('micBtn');
+    ['mousedown', 'touchstart'].forEach(evt => micBtn.addEventListener(evt, (e) => { e.preventDefault(); clearTimeout(pressTimer); pressTimer = setTimeout(() => startListening(), 20); }, { passive: false }));
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(evt => micBtn.addEventListener(evt, (e) => { e.preventDefault(); clearTimeout(pressTimer); stopListening(); }, { passive: false }));
+    micBtn.addEventListener('click', e => e.preventDefault());
+    micBtn.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); startListening(); } });
+    micBtn.addEventListener('keyup',   e => { if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); stopListening(); } });
+
+    // ── Init ───────────────────────────────────────────────────────
+    renderNiveauFilter();
+    renderReadExercise();
+    renderWriteExercise();
+    renderSpeakExercise();
+    renderWordGrid();
+    updateSpeechSupportMessage();
+    updateProgress();
   </script>
 </body>
 </html>
