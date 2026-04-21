@@ -148,7 +148,7 @@
 </head>
 <body>
   <!-- ── User Picker overlay ── -->
-  <div id="userPickerOverlay" class="user-picker-overlay" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+  <div id="userPickerOverlay" class="user-picker-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
     <div class="user-picker-card">
       <div class="picker-logo" aria-hidden="true"><svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M11 29C11 18.5 18.5 11 29 11h7v7c0 10.5-7.5 18-18 18h-7v-7Z" fill="currentColor" opacity="0.95"/><path d="M14 31c7-1 11-5 12-12" stroke="white" stroke-width="3.2" stroke-linecap="round"/></svg></div>
       <h2 id="pickerTitle" style="font-size:var(--text-lg);">Wie gaat er oefenen? 🌟</h2>
@@ -580,7 +580,8 @@
 
       // Eerst checken of de API bereikbaar is — null = offline, picker overslaan
       const users = await apiFetch('/api/users');
-      if (users === null) { overlay.classList.add('hidden'); return; }
+      if (users === null) return;   // API offline → overlay blijft verborgen
+      overlay.classList.remove('hidden');
 
       AVATARS.forEach(a => {
         const btn = document.createElement('button');
