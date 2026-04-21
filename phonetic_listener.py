@@ -12,26 +12,35 @@ from difflib import SequenceMatcher
 # ============================================================
 
 PHONETIC_MAP = {
+    # Accenten weghalen
     'á': 'a', 'à': 'a', 'â': 'a',
     'é': 'e', 'è': 'e', 'ê': 'e',
     'í': 'i', 'ì': 'i', 'î': 'i',
     'ó': 'o', 'ò': 'o', 'ô': 'o',
     'ú': 'u', 'ù': 'u', 'û': 'u',
+    # Klankwisselingen Spaans ↔ Papiaments
     'll': 'y',
     'gu': 'w',
     'qu': 'k',
     'ñ': 'ny',
-    'v':  'b',
+    'v':  'b',       # Spaans 'v' klinkt als 'b'
+    # Nieuw: aquí → aki, vota → bota → bo ta
+    'qui': 'ki',     # aquí → aki
+    'que': 'ke',     # quemar → kemar
+    'x':   'ks',     # extra dekking
 }
 
 ACCEPTED_VARIANTS = {
-    'bon dia': ['bon diá', 'bon dià', 'bon dia', 'buen dia', 'buenos dias'],
-    'awa':     ['agua', 'aqua', 'agwa', 'awa'],
-    'yama':    ['llama', 'jama', 'yama'],
-    'mi ta':   ['mita', 'mi ta'],
-    'danki':   ['danki', 'tranqui', 'dunkin'],
-    'kachó':   ['kacho', 'kachó'],
-    'cas':     ['kas', 'cas', 'casa'],
+    'bo ta aki':  ['bo ta aki', 'vota aqui', 'vota aquí',   # ← dit is jouw geval
+                   'bota aki', 'bo ta aqui'],
+    'bon dia':    ['bon diá', 'bon dià', 'bon dia', 'buen dia', 'buenos dias'],
+    'awa':        ['agua', 'aqua', 'agwa', 'awa'],
+    'yama':       ['llama', 'jama', 'yama'],
+    'mi ta':      ['mita', 'mi ta'],
+    'danki':      ['danki', 'tranqui', 'dunkin'],
+    'kachó':      ['kacho', 'kachó'],
+    'cas':        ['kas', 'cas'],
+    'mi ta aki':  ['mi ta aki', 'mita aqui', 'mi ta aqui'],  # zelfde patroon
 }
 
 # Omgekeerde lookup: variant → correct woord
