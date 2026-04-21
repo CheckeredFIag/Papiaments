@@ -1,5 +1,5 @@
 from pathlib import Path
-p=Path('output/github-pages-papiamento/index-v3.html')
+p=Path('output/github-pages-papiamento/index.html')
 text=p.read_text()
 text=text.replace('.layout { display:grid; grid-template-columns: minmax(250px, 320px) minmax(0,1fr); gap:var(--space-6); align-items:start; }','.layout { display:grid; grid-template-columns: minmax(220px, 280px) minmax(0,1fr); gap:var(--space-6); align-items:start; }')
 text=text.replace('.sidebar { padding:var(--space-5); position:sticky; top:var(--space-4); align-self:start; display:grid; gap:var(--space-5); overflow:hidden; max-height: calc(100vh - var(--space-8)); }','.sidebar { padding:var(--space-5); position:sticky; top:var(--space-4); align-self:start; display:grid; gap:var(--space-5); overflow:auto; max-height: calc(100vh - var(--space-8)); min-width:0; }')
