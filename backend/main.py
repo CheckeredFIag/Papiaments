@@ -3,11 +3,12 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .database import init_db
 from .models import UserCreate, ScoreIn, SessionStart, SessionEnd
-from . import crud
+from . import crud, portaal as portaal_crud
 
 
 @asynccontextmanager
@@ -90,6 +91,27 @@ def start_session(body: SessionStart):
 def end_session(body: SessionEnd):
     crud.end_session(body.session_id, body.exercises_done)
     return {'ok': True}
+
+
+# ── Portaal ────────────────────────────────────────────────────────────────
+
+@app.get('/portaal', include_in_schema=False)
+def serve_portaal():
+    f = Path(__file__).parent.parent / 'docs' / 'portaal.html'
+    return FileResponse(f)
+
+
+@app.get('/api/portaal/users')
+def portaal_users():
+    return portaal_crud.get_portaal_users()
+
+
+@app.get('/api/portaal/users/{user_id}/dashboard')
+def portaal_dashboard(user_id: int):
+    d = portaal_crud.get_portaal_dashboard(user_id)
+    if not d:
+        raise HTTPException(404, 'Gebruiker niet gevonden')
+    return d
 
 
 # ── Static files (altijd als laatste!) ────────────────────────────────────

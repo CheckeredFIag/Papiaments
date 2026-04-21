@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portaal — Papiamento Leeravontuur</title>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font-body: 'Satoshi', 'Inter', sans-serif;
+      --font-display: 'Cabinet Grotesk', 'Trebuchet MS', sans-serif;
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem;
+      --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem;
+      --color-bg:#fff8ef; --color-surface:#fffdf9; --color-surface-2:#fff5ea;
+      --color-surface-offset:#f8eadc; --color-border:#e8d5c0;
+      --color-text:#2f2418; --color-text-muted:#6e6256; --color-text-faint:#9d9082;
+      --color-text-inverse:#fffdf8;
+      --color-primary:#0b8f8c; --color-primary-hover:#0a7674; --color-primary-highlight:#d8f1ee;
+      --color-secondary:#f39c3d; --color-secondary-soft:#ffe0b5;
+      --color-success:#5e9d35; --color-success-soft:#e4f4d8;
+      --color-error:#c55a4b; --color-error-soft:#fde8e5;
+      --color-warning:#d4870a; --color-warning-soft:#fef0d6;
+      --color-purple:#8c68d9; --color-purple-soft:#ede7ff;
+      --radius-sm:.5rem; --radius-md:.9rem; --radius-lg:1.3rem;
+      --radius-xl:1.8rem; --radius-full:9999px;
+      --shadow-sm:0 2px 8px rgba(98,64,24,.08); --shadow-md:0 10px 30px rgba(98,64,24,.12);
+      --shadow-lg:0 20px 50px rgba(98,64,24,.16);
+      --transition:180ms cubic-bezier(.16,1,.3,1);
+    }
+    [data-theme="dark"] {
+      --color-bg:#181411; --color-surface:#211c18; --color-surface-2:#2a241f;
+      --color-surface-offset:#302922; --color-border:#4a4036;
+      --color-text:#f7ede1; --color-text-muted:#c6b7a8; --color-text-faint:#938475;
+      --color-text-inverse:#1a1612;
+      --color-primary:#5accc8; --color-primary-hover:#3eb3af; --color-primary-highlight:#2e3f3f;
+      --color-secondary:#f6b35f; --color-secondary-soft:#4d3821;
+      --color-success:#8fd05d; --color-success-soft:#1f3012;
+      --color-error:#ef8a7d; --color-error-soft:#3d1a17;
+      --color-warning:#f6b35f; --color-warning-soft:#3d2a0d;
+      --color-purple:#b59bff; --color-purple-soft:#2a2050;
+      --shadow-sm:0 2px 10px rgba(0,0,0,.22); --shadow-md:0 16px 38px rgba(0,0,0,.3);
+    }
+    *, *::before, *::after { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0; min-height:100dvh; font-family:var(--font-body);
+      font-size:var(--text-base); line-height:1.6; color:var(--color-text);
+      background:
+        radial-gradient(circle at top right, rgba(243,156,61,.1), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(11,143,140,.1), transparent 35%),
+        var(--color-bg);
+    }
+    h1,h2,h3,h4 { font-family:var(--font-display); margin:0; line-height:1.1; }
+    p { margin:0; }
+    button { cursor:pointer; border:none; font:inherit; }
+    input { font:inherit; }
+
+    /* ── Pincode scherm ── */
+    #pin-screen { min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:var(--space-6); }
+    .pin-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-lg); padding:var(--space-10) var(--space-8); max-width:420px; width:100%; display:grid; gap:var(--space-6); text-align:center; }
+    .pin-logo { width:72px; height:72px; border-radius:22px; background:linear-gradient(135deg,var(--color-primary),var(--color-secondary)); color:white; display:grid; place-items:center; margin:0 auto; box-shadow:var(--shadow-md); }
+    .pin-title { font-size:var(--text-lg); }
+    .pin-subtitle { color:var(--color-text-muted); font-size:var(--text-sm); }
+    .pin-dots { display:flex; justify-content:center; gap:var(--space-4); margin:var(--space-2) 0; }
+    .pin-dot { width:18px; height:18px; border-radius:50%; border:2px solid var(--color-border); background:transparent; transition:background var(--transition),border-color var(--transition),transform var(--transition); }
+    .pin-dot.filled { background:var(--color-primary); border-color:var(--color-primary); transform:scale(1.15); }
+    .pin-dot.error { background:var(--color-error); border-color:var(--color-error); animation:shake .4s ease; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    .pin-numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-3); }
+    .pin-key { aspect-ratio:1; border-radius:var(--radius-lg); border:1px solid var(--color-border); background:var(--color-surface-2); font-size:1.4rem; font-weight:700; color:var(--color-text); transition:background var(--transition),transform var(--transition); }
+    .pin-key:hover { background:var(--color-primary-highlight); }
+    .pin-key:active { transform:scale(.94); }
+    .pin-key.delete { font-size:1.1rem; color:var(--color-text-muted); }
+    .pin-error { color:var(--color-error); font-size:var(--text-sm); font-weight:700; min-height:1.4rem; }
+
+    /* ── Portaal shell ── */
+    #portaal-shell { display:none; }
+    #portaal-shell.visible { display:block; }
+    .app-shell { max-width:1200px; margin:0 auto; padding:var(--space-6); }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:var(--space-4); padding:var(--space-4) 0 var(--space-8); }
+    .brand { display:flex; align-items:center; gap:var(--space-3); }
+    .logo { width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,var(--color-primary),var(--color-secondary)); color:white; display:grid; place-items:center; box-shadow:var(--shadow-sm); }
+    .brand-title { font-family:var(--font-display); font-size:var(--text-lg); line-height:1; }
+    .brand-sub { font-size:var(--text-xs); color:var(--color-text-muted); }
+    .top-actions { display:flex; gap:var(--space-3); align-items:center; }
+    .btn { min-height:44px; padding:0 var(--space-5); border-radius:var(--radius-full); font-weight:700; font-size:var(--text-sm); transition:transform var(--transition),background var(--transition); }
+    .btn:hover { transform:translateY(-1px); }
+    .btn-primary { background:var(--color-primary); color:var(--color-text-inverse); }
+    .btn-ghost { background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text); box-shadow:var(--shadow-sm); }
+    .btn-danger { background:var(--color-error-soft); color:var(--color-error); border:1px solid var(--color-error); }
+    .section-head { display:grid; gap:var(--space-2); margin-bottom:var(--space-6); }
+    .eyebrow { display:inline-flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-3); border-radius:var(--radius-full); background:var(--color-primary-highlight); color:var(--color-primary); font-size:var(--text-xs); font-weight:700; text-transform:uppercase; letter-spacing:.08em; width:fit-content; }
+
+    /* ── Studentenkaartjes ── */
+    .student-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:var(--space-5); margin-bottom:var(--space-10); }
+    .student-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:var(--space-5); display:grid; gap:var(--space-4); cursor:pointer; transition:box-shadow var(--transition),transform var(--transition),border-color var(--transition); }
+    .student-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:color-mix(in srgb,var(--color-primary) 40%,var(--color-border)); }
+    .student-header { display:flex; align-items:center; gap:var(--space-4); }
+    .avatar-circle { width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--color-secondary-soft),var(--color-primary-highlight)); display:grid; place-items:center; font-size:1.6rem; flex-shrink:0; border:2px solid var(--color-border); }
+    .student-name { font-family:var(--font-display); font-size:1.1rem; }
+    .student-niveau { font-size:var(--text-xs); color:var(--color-text-muted); background:var(--color-surface-2); padding:2px 10px; border-radius:var(--radius-full); border:1px solid var(--color-border); width:fit-content; }
+    .skill-bars { display:grid; gap:var(--space-2); }
+    .skill-row { display:grid; grid-template-columns:80px 1fr 36px; align-items:center; gap:var(--space-3); }
+    .skill-label { font-size:var(--text-xs); color:var(--color-text-muted); font-weight:700; }
+    .mini-bar { height:8px; background:var(--color-surface-offset); border-radius:999px; overflow:hidden; }
+    .mini-bar-fill { height:100%; border-radius:999px; transition:width 600ms ease; }
+    .mini-bar-fill.read  { background:linear-gradient(90deg,#5accc8,#0b8f8c); }
+    .mini-bar-fill.write { background:linear-gradient(90deg,#f6b35f,#e07b10); }
+    .mini-bar-fill.speak { background:linear-gradient(90deg,#b59bff,#8c68d9); }
+    .skill-pct { font-size:var(--text-xs); font-weight:700; color:var(--color-text-muted); text-align:right; }
+    .student-footer { display:flex; justify-content:space-between; align-items:center; }
+    .stars-badge { display:flex; align-items:center; gap:var(--space-2); font-size:var(--text-xs); font-weight:700; color:var(--color-secondary); }
+    .last-seen { font-size:var(--text-xs); color:var(--color-text-faint); }
+
+    /* ── Detail paneel ── */
+    #detail-panel { display:none; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-md); padding:var(--space-6); margin-bottom:var(--space-10); }
+    #detail-panel.visible { display:grid; gap:var(--space-6); }
+    .detail-header { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--space-4); }
+    .detail-identity { display:flex; align-items:center; gap:var(--space-4); }
+    .detail-avatar { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,var(--color-secondary-soft),var(--color-primary-highlight)); display:grid; place-items:center; font-size:2.2rem; border:3px solid var(--color-border); flex-shrink:0; }
+    .detail-name { font-size:var(--text-lg); }
+    .detail-meta { display:flex; gap:var(--space-3); flex-wrap:wrap; margin-top:var(--space-2); }
+    .meta-tag { font-size:var(--text-xs); font-weight:700; padding:3px 12px; border-radius:var(--radius-full); border:1px solid var(--color-border); background:var(--color-surface-2); color:var(--color-text-muted); }
+    .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:var(--space-4); }
+    .stat-card { background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-4); display:grid; gap:var(--space-1); }
+    .stat-value { font-family:var(--font-display); font-size:2rem; line-height:1; }
+    .stat-label { font-size:var(--text-xs); color:var(--color-text-muted); }
+    .stat-card.stars  .stat-value { color:var(--color-secondary); }
+    .stat-card.success .stat-value { color:var(--color-success); }
+    .stat-card.error  .stat-value { color:var(--color-error); }
+    .stat-card.purple .stat-value { color:var(--color-purple); }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-5); }
+    @media (max-width:700px) { .two-col { grid-template-columns:1fr; } }
+    .sub-card { background:var(--color-surface-2); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-5); display:grid; gap:var(--space-4); }
+    .sub-card h4 { font-size:1rem; }
+    .word-list { display:grid; gap:var(--space-2); }
+    .word-row { display:flex; align-items:center; justify-content:space-between; gap:var(--space-3); padding:var(--space-3) var(--space-4); background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); }
+    .word-row-left { display:flex; align-items:center; gap:var(--space-3); }
+    .word-emoji { font-size:1.3rem; width:32px; text-align:center; }
+    .word-text { font-weight:700; font-size:var(--text-sm); }
+    .word-meaning { font-size:var(--text-xs); color:var(--color-text-muted); }
+    .word-badge { font-size:var(--text-xs); font-weight:800; padding:3px 10px; border-radius:var(--radius-full); }
+    .word-badge.good { background:var(--color-success-soft); color:var(--color-success); }
+    .word-badge.bad  { background:var(--color-error-soft);   color:var(--color-error); }
+    .niveau-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:var(--space-3); }
+    .niveau-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-4); text-align:center; display:grid; gap:var(--space-2); }
+    .niveau-label { font-size:var(--text-xs); color:var(--color-text-muted); font-weight:700; }
+    .niveau-score { font-family:var(--font-display); font-size:1.6rem; }
+    .niveau-bar { height:6px; background:var(--color-surface-offset); border-radius:999px; overflow:hidden; margin-top:2px; }
+    .niveau-bar-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--color-secondary),var(--color-primary)); transition:width 700ms ease; }
+    .empty-state { text-align:center; padding:var(--space-12) var(--space-6); color:var(--color-text-muted); display:grid; gap:var(--space-4); }
+    .loading { display:flex; align-items:center; justify-content:center; padding:var(--space-10); color:var(--color-text-muted); gap:var(--space-3); font-weight:700; }
+    .spinner { width:24px; height:24px; border-radius:50%; border:3px solid var(--color-border); border-top-color:var(--color-primary); animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .footer-note { text-align:center; color:var(--color-text-faint); font-size:var(--text-xs); padding:var(--space-6) 0 var(--space-4); }
+    :focus-visible { outline:3px solid var(--color-secondary); outline-offset:3px; }
+    @media (max-width:640px) { .app-shell { padding:var(--space-4); } .topbar { flex-direction:column; align-items:flex-start; } .pin-card { padding:var(--space-6) var(--space-5); } }
+  </style>
+</head>
+<body>
+
+<!-- Pincode scherm -->
+<div id="pin-screen">
+  <div class="pin-card">
+    <div class="pin-logo" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="32" height="32" fill="none">
+        <path d="M11 29C11 18.5 18.5 11 29 11h7v7c0 10.5-7.5 18-18 18h-7v-7Z" fill="currentColor" opacity="0.95"/>
+        <path d="M14 31c7-1 11-5 12-12" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="pin-title">Portaal voor ouders &amp; leraren</h1>
+      <p class="pin-subtitle">Voer de pincode in om de voortgang van de leerlingen te bekijken.</p>
+    </div>
+    <div class="pin-dots" aria-hidden="true" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-numpad" role="group" aria-label="Numpad">
+      <button class="pin-key" data-digit="1">1</button>
+      <button class="pin-key" data-digit="2">2</button>
+      <button class="pin-key" data-digit="3">3</button>
+      <button class="pin-key" data-digit="4">4</button>
+      <button class="pin-key" data-digit="5">5</button>
+      <button class="pin-key" data-digit="6">6</button>
+      <button class="pin-key" data-digit="7">7</button>
+      <button class="pin-key" data-digit="8">8</button>
+      <button class="pin-key" data-digit="9">9</button>
+      <button class="pin-key delete" data-digit="clear">⌫ alles</button>
+      <button class="pin-key" data-digit="0">0</button>
+      <button class="pin-key delete" data-digit="back">⌫</button>
+    </div>
+    <p class="pin-error" id="pinError" aria-live="polite"></p>
+  </div>
+</div>
+
+<!-- Portaal shell (verborgen tot na pincode) -->
+<div id="portaal-shell">
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="28" height="28" fill="none">
+            <path d="M11 29C11 18.5 18.5 11 29 11h7v7c0 10.5-7.5 18-18 18h-7v-7Z" fill="currentColor" opacity="0.95"/>
+            <path d="M14 31c7-1 11-5 12-12" stroke="white" stroke-width="3.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">Ouder &amp; Leraar Portaal</div>
+          <div class="brand-sub">Papiamento Leeravontuur — voortgangsoverzicht</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-ghost" id="refreshBtn">↻ Vernieuwen</button>
+        <button class="btn btn-ghost" data-theme-toggle aria-label="Thema wisselen">🌙 Thema</button>
+        <button class="btn btn-danger" id="logoutBtn">Uitloggen</button>
+      </div>
+    </header>
+
+    <section id="overview-section">
+      <div class="section-head">
+        <span class="eyebrow">📊 Overzicht</span>
+        <h2>Alle leerlingen</h2>
+        <p style="color:var(--color-text-muted)">Klik op een kaartje om de gedetailleerde voortgang te bekijken.</p>
+      </div>
+      <div id="studentGrid" class="student-grid">
+        <div class="loading"><div class="spinner"></div> Leerlingen laden…</div>
+      </div>
+    </section>
+
+    <div id="detail-panel">
+      <div class="detail-header">
+        <div class="detail-identity">
+          <div class="detail-avatar" id="detailAvatar">🧒</div>
+          <div>
+            <h2 class="detail-name" id="detailName">—</h2>
+            <div class="detail-meta" id="detailMeta"></div>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="closeDetailBtn">✕ Sluiten</button>
+      </div>
+      <div class="stats-row" id="detailStats"></div>
+      <div class="sub-card">
+        <h4>📊 Voortgang per niveau</h4>
+        <div class="niveau-grid" id="niveauGrid"></div>
+      </div>
+      <div class="two-col">
+        <div class="sub-card">
+          <h4>⚠️ Aandachtspunten</h4>
+          <p style="font-size:var(--text-xs);color:var(--color-text-muted);">Woorden met de meeste fouten — goed om extra te oefenen.</p>
+          <div class="word-list" id="weakWordList"></div>
+        </div>
+        <div class="sub-card">
+          <h4>✅ Sterktes</h4>
+          <p style="font-size:var(--text-xs);color:var(--color-text-muted);">Woorden die goed gaan — hier zit het vertrouwen.</p>
+          <div class="word-list" id="strongWordList"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer-note">Portaal is alleen bedoeld voor ouders en leraren. Niet delen met leerlingen.</p>
+  </div>
+</div>
+
+<script>
+// ── Configuratie ───────────────────────────────────────────
+const PIN_CODE    = '1234';    // ← verander naar gewenste pincode
+const SESSION_KEY = 'portaal_auth';
+
+// ── Thema ──────────────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('portaal_theme', t);
+  const btn = document.querySelector('[data-theme-toggle]');
+  if (btn) btn.textContent = t === 'dark' ? '☀️ Thema' : '🌙 Thema';
+}
+document.querySelector('[data-theme-toggle]').addEventListener('click', () =>
+  setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+const savedTheme = localStorage.getItem('portaal_theme');
+if (savedTheme) setTheme(savedTheme);
+else if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+
+// ── Pincode ────────────────────────────────────────────────
+let pinEntry = '';
+
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.toggle('filled', i < pinEntry.length);
+    dot.classList.remove('error');
+  }
+}
+
+function shakeError(msg) {
+  document.getElementById('pinError').textContent = msg;
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('dot' + i);
+    d.classList.remove('filled');
+    d.classList.add('error');
+  }
+  setTimeout(() => {
+    pinEntry = '';
+    updateDots();
+    for (let i = 0; i < 4; i++)
+      document.getElementById('dot' + i).classList.remove('error');
+  }, 800);
+}
+
+function checkPin() {
+  if (pinEntry === PIN_CODE) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    document.getElementById('pin-screen').style.display = 'none';
+    document.getElementById('portaal-shell').classList.add('visible');
+    document.getElementById('pinError').textContent = '';
+    loadStudents();
+  } else {
+    shakeError('Verkeerde pincode. Probeer opnieuw.');
+  }
+}
+
+document.querySelectorAll('.pin-key').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const d = btn.dataset.digit;
+    if (d === 'back') {
+      pinEntry = pinEntry.slice(0, -1);
+      document.getElementById('pinError').textContent = '';
+      updateDots();
+    } else if (d === 'clear') {
+      pinEntry = '';
+      document.getElementById('pinError').textContent = '';
+      updateDots();
+    } else if (pinEntry.length < 4) {
+      pinEntry += d;
+      updateDots();
+      if (pinEntry.length === 4) setTimeout(checkPin, 120);
+    }
+  });
+});
+
+document.addEventListener('keydown', e => {
+  const pinVisible = document.getElementById('pin-screen').style.display !== 'none' &&
+                     document.getElementById('pin-screen').style.display !== '';
+  // also show when display is '' (default block)
+  const onPin = !sessionStorage.getItem(SESSION_KEY);
+  if (!onPin) return;
+  if (e.key >= '0' && e.key <= '9' && pinEntry.length < 4) {
+    pinEntry += e.key; updateDots();
+    if (pinEntry.length === 4) setTimeout(checkPin, 120);
+  } else if (e.key === 'Backspace') {
+    pinEntry = pinEntry.slice(0, -1); updateDots();
+  }
+});
+
+if (sessionStorage.getItem(SESSION_KEY)) {
+  document.getElementById('pin-screen').style.display = 'none';
+  document.getElementById('portaal-shell').classList.add('visible');
+  loadStudents();
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem(SESSION_KEY);
+  pinEntry = '';
+  updateDots();
+  document.getElementById('pin-screen').style.display = '';
+  document.getElementById('portaal-shell').classList.remove('visible');
+  document.getElementById('detail-panel').classList.remove('visible');
+});
+
+// ── API ────────────────────────────────────────────────────
+async function apiFetch(path) {
+  try {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (err) {
+    console.error('API fout:', path, err.message);
+    return null;
+  }
+}
+
+// ── Studenten laden ────────────────────────────────────────
+async function loadStudents() {
+  const grid = document.getElementById('studentGrid');
+  grid.innerHTML = '<div class="loading"><div class="spinner"></div> Leerlingen laden…</div>';
+
+  const data = await apiFetch('/api/portaal/users');
+  if (!data || data.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div style="font-size:3rem">🧑‍🏫</div>
+        <h3>Nog geen leerlingen</h3>
+        <p>Zodra een kind de app opent en een naam kiest, verschijnt die hier.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  data.forEach(s => {
+    const card = buildStudentCard(s);
+    card.addEventListener('click', () => loadDetail(s.id));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') card.click(); });
+    grid.appendChild(card);
+  });
+}
+
+function buildStudentCard(s) {
+  const readPct  = pct(s.read_correct,  s.read_total);
+  const writePct = pct(s.write_correct, s.write_total);
+  const speakPct = pct(s.speak_correct, s.speak_total);
+
+  const card = document.createElement('div');
+  card.className = 'student-card';
+  card.setAttribute('role', 'button');
+  card.setAttribute('tabindex', '0');
+  card.setAttribute('aria-label', `Bekijk voortgang van ${s.name}`);
+  card.innerHTML = `
+    <div class="student-header">
+      <div class="avatar-circle">${esc(s.avatar) || '🧒'}</div>
+      <div>
+        <div class="student-name">${esc(s.name)}</div>
+        <div class="student-niveau">${esc(s.niveau || 'Alle niveaus')}</div>
+      </div>
+    </div>
+    <div class="skill-bars">
+      ${skillBar('📖 Lezen',     readPct,  'read')}
+      ${skillBar('✍️ Schrijven', writePct, 'write')}
+      ${skillBar('🎤 Spreken',   speakPct, 'speak')}
+    </div>
+    <div class="student-footer">
+      <span class="stars-badge">⭐ ${s.stars || 0} goed</span>
+      <span class="last-seen">${formatDate(s.last_active)}</span>
+    </div>`;
+  return card;
+}
+
+function skillBar(label, value, cls) {
+  return `
+    <div class="skill-row">
+      <span class="skill-label">${label}</span>
+      <div class="mini-bar"><div class="mini-bar-fill ${cls}" style="width:${value}%"></div></div>
+      <span class="skill-pct">${value}%</span>
+    </div>`;
+}
+
+// ── Detail laden ───────────────────────────────────────────
+async function loadDetail(userId) {
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  document.getElementById('detailStats').innerHTML =
+    '<div class="loading"><div class="spinner"></div> Laden…</div>';
+  ['niveauGrid','weakWordList','strongWordList'].forEach(id =>
+    document.getElementById(id).innerHTML = '');
+
+  const d = await apiFetch(`/api/portaal/users/${userId}/dashboard`);
+  if (!d) {
+    document.getElementById('detailStats').innerHTML =
+      '<p style="color:var(--color-error)">Kon gegevens niet laden.</p>';
+    return;
+  }
+
+  document.getElementById('detailAvatar').textContent = d.avatar || '🧒';
+  document.getElementById('detailName').textContent   = d.name;
+  document.getElementById('detailMeta').innerHTML = `
+    <span class="meta-tag">Niveau: ${esc(d.niveau || 'Alle')}</span>
+    <span class="meta-tag">Lid sinds: ${formatDate(d.created_at)}</span>
+    <span class="meta-tag">Laatste sessie: ${formatDate(d.last_active)}</span>`;
+
+  const totalCorrect = (d.read_correct  || 0) + (d.write_correct || 0) + (d.speak_correct || 0);
+  const totalWrong   = (d.read_wrong    || 0) + (d.write_wrong   || 0) + (d.speak_wrong   || 0);
+  document.getElementById('detailStats').innerHTML =
+    statCard('⭐', d.stars || 0,           'Goed beantwoord', 'stars') +
+    statCard('✅', totalCorrect,            'Totaal goed',     'success') +
+    statCard('❌', totalWrong,              'Totaal fout',     'error') +
+    statCard('🎯', pct(totalCorrect, totalCorrect + totalWrong) + '%', 'Slagingspercentage', 'purple');
+
+  // Niveau voortgang
+  const niveauGrid = document.getElementById('niveauGrid');
+  const np = d.niveau_progress || {};
+  const levels = ['4-6','6-8','8-10','10','all'];
+  const labels = { '4-6':'4–6 jaar', '6-8':'6–8 jaar', '8-10':'8–10 jaar', '10':'10+ jaar', 'all':'Algemeen' };
+  niveauGrid.innerHTML = '';
+  levels.forEach(lvl => {
+    const n = np[lvl] || { correct:0, total:0 };
+    const p = pct(n.correct, n.total);
+    const el = document.createElement('div');
+    el.className = 'niveau-card';
+    el.innerHTML = `
+      <div class="niveau-label">${labels[lvl]}</div>
+      <div class="niveau-score" style="color:${scoreColor(p)}">${p}%</div>
+      <div class="niveau-bar"><div class="niveau-bar-fill" style="width:${p}%"></div></div>
+      <div style="font-size:var(--text-xs);color:var(--color-text-faint)">${n.correct}/${n.total} goed</div>`;
+    niveauGrid.appendChild(el);
+  });
+
+  renderWordList('weakWordList',   d.weaknesses || [], 'bad');
+  renderWordList('strongWordList', d.strengths  || [], 'good');
+}
+
+function renderWordList(elId, words, badgeClass) {
+  const el = document.getElementById(elId);
+  if (!words.length) {
+    el.innerHTML = '<p style="font-size:var(--text-xs);color:var(--color-text-faint);padding:var(--space-3)">Nog geen gegevens.</p>';
+    return;
+  }
+  el.innerHTML = words.slice(0, 8).map(w => `
+    <div class="word-row">
+      <div class="word-row-left">
+        <span class="word-emoji">${esc(w.emoji) || '📝'}</span>
+        <div>
+          <div class="word-text">${esc(w.word)}</div>
+          <div class="word-meaning">${esc(w.meaning || '')}</div>
+        </div>
+      </div>
+      <span class="word-badge ${badgeClass}">
+        ${badgeClass === 'bad'
+          ? `${w.wrong_total || 0}× fout`
+          : `${pct(w.correct_total, (w.correct_total||0)+(w.wrong_total||0))}%`}
+      </span>
+    </div>`).join('');
+}
+
+function statCard(icon, value, label, cls) {
+  return `<div class="stat-card ${cls}">
+    <div style="font-size:1.5rem">${icon}</div>
+    <div class="stat-value">${value}</div>
+    <div class="stat-label">${label}</div>
+  </div>`;
+}
+
+// ── Knoppen ────────────────────────────────────────────────
+document.getElementById('closeDetailBtn').addEventListener('click', () =>
+  document.getElementById('detail-panel').classList.remove('visible'));
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  loadStudents();
+  document.getElementById('detail-panel').classList.remove('visible');
+});
+
+// ── Hulpfuncties ───────────────────────────────────────────
+function pct(correct, total) {
+  if (!total) return 0;
+  return Math.round((correct / total) * 100);
+}
+function scoreColor(p) {
+  if (p >= 75) return 'var(--color-success)';
+  if (p >= 50) return 'var(--color-warning)';
+  return 'var(--color-error)';
+}
+function formatDate(iso) {
+  if (!iso) return 'Nog niet actief';
+  const d = new Date(iso);
+  return d.toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
+}
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
