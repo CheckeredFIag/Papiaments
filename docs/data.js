@@ -1,4 +1,4 @@
-// data.js — automatisch gegenereerd door src/build_data_js.py op 2026-04-21
+// data.js — automatisch gegenereerd door src/build_data_js.py op 2026-04-22
 // Bron: data/words.csv
 // Pas dit bestand NIET handmatig aan; draai update_index.py opnieuw.
 

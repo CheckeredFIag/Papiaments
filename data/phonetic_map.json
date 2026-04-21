@@ -1,19 +1,89 @@
 {
+  "language_pair": "es-pa",
+  "description": "Regels voor het omzetten van Spaanse spelling/klank naar Papiamento-achtige uitspraak en schrijfwijze.",
   "accents": {
-    "á": "a", "à": "a", "â": "a",
-    "é": "e", "è": "e", "ê": "e",
-    "í": "i", "ì": "i", "î": "i",
-    "ó": "o", "ò": "o", "ô": "o",
-    "ú": "u", "ù": "u", "û": "u"
+    "á": "a",
+    "à": "a",
+    "â": "a",
+    "é": "e",
+    "è": "e",
+    "ê": "e",
+    "í": "i",
+    "ì": "i",
+    "î": "i",
+    "ó": "o",
+    "ò": "o",
+    "ô": "o",
+    "ú": "u",
+    "ù": "u",
+    "û": "u"
   },
-  "sounds": {
+  "fixed_sounds": {
     "ll": "y",
-    "gu": "w",
-    "qu": "k",
-    "qui": "ki",
-    "que": "ke",
     "ñ": "ny",
     "v": "b",
-    "x": "ks"
+    "x": "ks",
+    "ch": "ch",
+    "rr": "r",
+    "h": ""
+  },
+  "context_sounds": {
+    "gu": {
+      "before": ["e", "i"],
+      "output": "g"
+    },
+    "qu": {
+      "before": ["e", "i"],
+      "output": "k"
+    },
+    "g_soft": {
+      "before": ["e", "i"],
+      "output": "h"
+    },
+    "c_soft": {
+      "before": ["e", "i"],
+      "output": "s"
+    },
+    "c": {
+      "before": ["a", "o", "u"],
+      "output": "k"
+    }
+  },
+  "single_sounds": {
+    "a": "a",
+    "b": "b",
+    "d": "d",
+    "e": "e",
+    "f": "f",
+    "g": "g",
+    "i": "i",
+    "j": "h",
+    "k": "k",
+    "l": "l",
+    "m": "m",
+    "n": "n",
+    "o": "o",
+    "p": "p",
+    "r": "r",
+    "s": "s",
+    "t": "t",
+    "u": "u",
+    "y": "j"
+  },
+  "exceptions": {
+    "no_change": [
+      "aruba",
+      "papiamento",
+      "cas",
+      "scol",
+      "cacho",
+      "poko poko",
+      "no papia asina liher"
+    ],
+    "notes": [
+      "c en g zijn contextafhankelijk",
+      "h wordt meestal niet uitgesproken in Spaanse leenwoorden",
+      "y kan per woord verschillen tussen j-klank en i-klank"
+    ]
   }
 }

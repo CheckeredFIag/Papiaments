@@ -1,6 +1,7 @@
 """
 Fonetische vergelijking specifiek voor Papiaments.
 Laadt klankmapping en varianten uit data/phonetic_map.json en data/phonetic_variants.json.
+Ondersteunt vaste regels, contextregels (c/g voor bepaalde klinkers) en uitzonderingen.
 """
 
 import json
@@ -10,18 +11,23 @@ from pathlib import Path
 
 _DATA = Path(__file__).parent.parent / 'data'
 
-def _load_phonetic_map() -> dict[str, str]:
-    raw = json.loads((_DATA / 'phonetic_map.json').read_text(encoding='utf-8'))
-    # accenten eerst, dan klanken — langere patronen voor kortere
-    combined = {**raw['accents'], **raw['sounds']}
-    return dict(sorted(combined.items(), key=lambda x: -len(x[0])))
+
+def _load_phonetic_map() -> dict:
+    return json.loads((_DATA / 'phonetic_map.json').read_text(encoding='utf-8'))
 
 
 def _load_variants() -> dict[str, list[str]]:
     return json.loads((_DATA / 'phonetic_variants.json').read_text(encoding='utf-8'))
 
 
-PHONETIC_MAP      = _load_phonetic_map()
+_MAP = _load_phonetic_map()
+
+_ACCENTS    = _MAP['accents']
+_FIXED      = dict(sorted(_MAP['fixed_sounds'].items(), key=lambda x: -len(x[0])))
+_CTX        = _MAP['context_sounds']
+_SINGLE     = _MAP['single_sounds']
+_EXCEPTIONS = set(_MAP['exceptions']['no_change'])
+
 ACCEPTED_VARIANTS = _load_variants()
 
 VARIANT_LOOKUP = {
@@ -31,12 +37,69 @@ VARIANT_LOOKUP = {
 }
 
 
-# ── Functies ───────────────────────────────────────────────────────────────
+# ── Context-regels (volgorde: specifiek → algemeen) ────────────────────────
+
+def _apply_context_sounds(text: str) -> str:
+    result = text
+
+    # gu voor e/i → g  (bijv. guerra → gera, guia → gia)
+    rule = _CTX.get('gu')
+    if rule:
+        chars = ''.join(rule['before'])
+        result = re.sub(f'gu(?=[{chars}])', rule['output'], result)
+
+    # qu voor e/i → k  (bijv. que → ke, quiero → kiero)
+    rule = _CTX.get('qu')
+    if rule:
+        chars = ''.join(rule['before'])
+        result = re.sub(f'qu(?=[{chars}])', rule['output'], result)
+
+    # g voor e/i → h   (bijv. gente → hente)
+    rule = _CTX.get('g_soft')
+    if rule:
+        chars = ''.join(rule['before'])
+        result = re.sub(f'g(?=[{chars}])', rule['output'], result)
+
+    # c voor e/i → s   (bijv. ciudad → siudad)
+    rule = _CTX.get('c_soft')
+    if rule:
+        chars = ''.join(rule['before'])
+        result = re.sub(f'c(?=[{chars}])', rule['output'], result)
+
+    # c voor a/o/u → k (bijv. casa → kasa, coche → koche)
+    rule = _CTX.get('c')
+    if rule:
+        chars = ''.join(rule['before'])
+        result = re.sub(f'c(?=[{chars}])', rule['output'], result)
+
+    # resterende c (bijv. aan het einde of voor medeklinker) → k
+    result = re.sub(r'c(?![aeiou])', 'k', result)
+
+    return result
+
+
+# ── Hoofdfunctie ───────────────────────────────────────────────────────────
 
 def phonetic_normalization(word: str) -> str:
     result = word.lower().strip()
-    for pattern, replacement in PHONETIC_MAP.items():
+
+    if result in _EXCEPTIONS:
+        return result
+
+    # 1. Accenten
+    for pattern, replacement in _ACCENTS.items():
         result = result.replace(pattern, replacement)
+
+    # 2. Vaste klanken (langste patronen eerst)
+    for pattern, replacement in _FIXED.items():
+        result = result.replace(pattern, replacement)
+
+    # 3. Contextafhankelijke klanken
+    result = _apply_context_sounds(result)
+
+    # 4. Losse tekens (j→h, y→j, etc.)
+    result = ''.join(_SINGLE.get(ch, ch) for ch in result)
+
     return result
 
 
@@ -80,10 +143,22 @@ def language_distinction_detection(word: str) -> str:
 # ── Test ───────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    tests = ['bon diá', 'agua', 'llama', 'mita', 'bon dia']
-    print(f"{'Invoer':<20} {'Geaccepteerd':<14} {'Correct':<15} {'Taal'}")
-    print('-' * 65)
-    for t in tests:
+    tests = [
+        ('bon diá',   'bon dia'),
+        ('agua',      'awa'),
+        ('llama',     'yama'),
+        ('mita',      'mi ta'),
+        ('guerra',    None),
+        ('gente',     None),
+        ('ciudad',    None),
+        ('casa',      None),
+        ('que',       None),
+        ('aruba',     None),
+    ]
+    print(f"{'Invoer':<20} {'Genorm.':<15} {'Accept?':<10} {'Correct':<15} {'Taal'}")
+    print('-' * 75)
+    for t, _ in tests:
+        norm = phonetic_normalization(t)
         ok, correct = accept_variant(t)
         lang = language_distinction_detection(t)
-        print(f"{t:<20} {'✅ ja' if ok else '❌ nee':<14} {correct:<15} {lang}")
+        print(f"{t:<20} {norm:<15} {'✅' if ok else '❌':<10} {correct:<15} {lang}")
