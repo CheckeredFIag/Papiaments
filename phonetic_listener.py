@@ -29,8 +29,8 @@ ACCEPTED_VARIANTS = {
     'awa':     ['agua', 'aqua', 'agwa', 'awa'],
     'yama':    ['llama', 'jama', 'yama'],
     'mi ta':   ['mita', 'mi ta'],
-    'danki':   ['danki', 'gracias'],
-    'kachó':   ['kacho', 'kachó', 'perro'],
+    'danki':   ['danki', 'tranqui', 'dunkin'],
+    'kachó':   ['kacho', 'kachó'],
     'cas':     ['kas', 'cas', 'casa'],
 }
 
@@ -111,3 +111,8 @@ if __name__ == '__main__':
         ok, correct = accept_variant(t)
         lang = language_distinction_detection(t)
         print(f"{t:<20} {'✅ ja' if ok else '❌ nee':<14} {correct:<15} {lang}")
+
+    print("✅ Klaar! Push nu naar GitHub:")
+    print("   git add phonetic_listener.py")
+    print("   git commit -m 'Fonetische logica toegevoegd'")
+    print("   git push")        
