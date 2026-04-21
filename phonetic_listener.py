@@ -31,8 +31,7 @@ PHONETIC_MAP = {
 }
 
 ACCEPTED_VARIANTS = {
-    'bo ta aki':  ['bo ta aki', 'vota aqui', 'vota aquí',   # ← dit is jouw geval
-                   'bota aki', 'bo ta aqui'],
+    'bo ta':      ['bo ta', 'vota', 'bota', 'vo ta'],
     'bon dia':    ['bon diá', 'bon dià', 'bon dia', 'buen dia', 'buenos dias'],
     'awa':        ['agua', 'aqua', 'agwa', 'awa'],
     'yama':       ['llama', 'jama', 'yama'],
@@ -40,7 +39,9 @@ ACCEPTED_VARIANTS = {
     'danki':      ['danki', 'tranqui', 'dunkin'],
     'kachó':      ['kacho', 'kachó'],
     'cas':        ['kas', 'cas'],
-    'mi ta aki':  ['mi ta aki', 'mita aqui', 'mi ta aqui'],  # zelfde patroon
+    'mi ta aki':  ['mi ta aki', 'mita aqui', 'mi ta aqui'], 
+    'bo ta aki':  ['bo ta aki', 'vota aqui', 'vota aquí',
+                   'bota aki', 'bo ta aqui'],
 }
 
 # Omgekeerde lookup: variant → correct woord
