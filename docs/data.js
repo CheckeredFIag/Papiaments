@@ -1,5 +1,5 @@
-// data.js — automatisch gegenereerd door update_index.py op 2026-04-21
-// Bron: aruba_papiamento_db_structuur.csv
+// data.js — automatisch gegenereerd door src/build_data_js.py op 2026-04-21
+// Bron: data/words.csv
 // Pas dit bestand NIET handmatig aan; draai update_index.py opnieuw.
 
 const words = [
@@ -442,7 +442,7 @@ const words = [
     "niveau": "10"
   },
   {
-    "word": "ku",
+    "word": "cu",
     "emoji": "👥",
     "meaning": "met",
     "niveau": "10"
@@ -1206,7 +1206,7 @@ const readExercises = [
     "options": [
       "abou",
       "pregunta",
-      "ku"
+      "cu"
     ],
     "niveau": "10"
   },
@@ -1217,7 +1217,7 @@ const readExercises = [
     "options": [
       "beró",
       "komo",
-      "ku"
+      "cu"
     ],
     "niveau": "10"
   },
@@ -1266,11 +1266,11 @@ const readExercises = [
     "niveau": "10"
   },
   {
-    "word": "ku",
+    "word": "cu",
     "emoji": "👥",
     "hint": "Hint: met.",
     "options": [
-      "ku",
+      "cu",
       "frasa",
       "ponent"
     ],
@@ -2468,16 +2468,16 @@ const writeExercises = [
     "niveau": "10"
   },
   {
-    "word": "ku",
+    "word": "cu",
     "hint": "Tip: met.",
     "letters": [
       "p",
-      "k",
+      "c",
       "u",
-      "h",
+      "i",
       "w"
     ],
-    "sample": "Mi ta ku.",
+    "sample": "Mi ta cu.",
     "niveau": "10"
   },
   {
