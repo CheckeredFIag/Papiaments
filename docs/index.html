@@ -578,6 +578,10 @@
       const createBtn = document.getElementById('pickerCreateBtn');
       const skipBtn   = document.getElementById('pickerSkipBtn');
 
+      // Eerst checken of de API bereikbaar is — null = offline, picker overslaan
+      const users = await apiFetch('/api/users');
+      if (users === null) { overlay.classList.add('hidden'); return; }
+
       AVATARS.forEach(a => {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -591,8 +595,7 @@
         avatarRow.appendChild(btn);
       });
 
-      const users = await apiFetch('/api/users');
-      if (users && users.length > 0) {
+      if (users.length > 0) {
         listEl.innerHTML = '';
         users.forEach(u => {
           const btn = document.createElement('button');
@@ -609,12 +612,14 @@
       createBtn.addEventListener('click', async () => {
         const name = nameInput.value.trim();
         if (!name) { nameInput.focus(); return; }
+        createBtn.disabled = true;
         const user = await apiFetch('/api/users', {
           method: 'POST',
           body: JSON.stringify({ name, avatar: pickerAvatar, niveau: activeNiveau === 'all' ? '4-6' : activeNiveau }),
         });
+        createBtn.disabled = false;
         if (user) { selectUser(user, overlay); }
-        else { nameInput.value = ''; nameInput.placeholder = 'Naam al in gebruik, kies een andere'; nameInput.focus(); }
+        else { nameInput.select(); nameInput.placeholder = 'Naam al in gebruik — kies een andere'; nameInput.focus(); }
       });
       nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') createBtn.click(); });
       skipBtn.addEventListener('click', () => overlay.classList.add('hidden'));
