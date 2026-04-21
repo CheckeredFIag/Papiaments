@@ -17,12 +17,12 @@ HTML_FILE = Path('docs/index.html')
 
 ACCEPTED_VARIANTS = {
     'bon dia':   ['bon diá', 'bon dià', 'bon dia', 'buen dia', 'buenos dias'],
-    'awa':       ['agua', 'agwa', 'awa'],
+    'awa':       ['agua', 'aqua', 'agwa', 'awa'],
     'yama':      ['llama', 'jama', 'yama'],
     'mi ta':     ['mita', 'mi ta'],
-    'danki':     ['danki', 'gracias'],
+    'danki':     ['danki', 'tranqui','dunkin'],
     'kachó':     ['kacho', 'kachó', 'perro'],
-    'cas':       ['kas', 'cas', 'casa'],
+    'cas':       ['kas', 'cas',],
 }
 
 # ============================================================
@@ -205,6 +205,6 @@ if __name__ == '__main__':
     list_all_words()
 
     print("✅ Klaar! Push nu naar GitHub:")
-    print("   git add docs/index.html")
+    print("   git add update_index.py")
     print("   git commit -m 'Nieuwe woorden toegevoegd'")
     print("   git push")
